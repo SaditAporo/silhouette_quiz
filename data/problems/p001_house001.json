@@ -1,0 +1,22 @@
+{
+  "id": "p001_house001",
+  "name": "家",
+  "image": "house001.png",
+  "animation": "house001.gif",
+  "areas": [
+    {
+      "shape": "triangle",
+      "color": null,
+      "centerX": 150,
+      "centerY": 80,
+      "rotation": 0
+    },
+    {
+      "shape": "rectangle",
+      "color": null,
+      "centerX": 150,
+      "centerY": 150,
+      "rotation": 0
+    }
+  ]
+}

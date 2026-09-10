@@ -1,0 +1,17 @@
+# Pythonが生成するキャッシュ・一時ファイル
+__pycache__/
+*.py[cod]
+*$py.class
+
+# 仮想環境（venv や .venv など）
+venv/
+.venv/
+env/
+.env
+
+# 環境変数・機密情報（もし使う場合）
+.env
+
+# エディタ設定
+.vscode/
+.idea/
