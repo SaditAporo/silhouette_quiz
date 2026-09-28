@@ -668,18 +668,29 @@ def display(game):
     screen = game.get_screen()
 
     if screen == SCREEN_OPENING:
+        # クリック音
+        C05_sound.play_sound("opening")
         show_opening(game)
 
     elif screen == SCREEN_SELECT:
+        # クリック音
+        C05_sound.play_sound("button")
         show_select(game)
 
     elif screen == SCREEN_QUIZ:
+         # クリック音
+        C05_sound.play_sound("button")
         show_quiz(game)
 
     elif screen == SCREEN_CORRECT:
+        # クリック音
+        C05_sound.play_sound("True")
         show_correct(game)
 
     elif screen == SCREEN_INCORRECT:
+        # クリック音
+        C05_sound.play_sound("False")
+
         show_incorrect(game)
 
     else:
