@@ -1,7 +1,6 @@
 #import tkinter as tk
 from A01_problem_data import load_problem
 import C02_config
-import C05_sound
 import cv2
 from PIL import Image, ImageTk
 import os
@@ -99,29 +98,10 @@ from B01_camera_v1 import (
     get_latest_frame
 )
 
-def close_application():
-    """pygameアプリケーションを完全に終了する"""
-    print("[D01_display] アプリケーションを終了します")
-
-    # カメラスレッドを停止
+def close_application(root):
     stop_camera_thread()
-
-    # カメラを解放
     release_camera()
-
-    # pygameを終了
-    pygame.quit()
-
-    # Pythonプログラムを終了
-    import sys
-    sys.exit()
-
-#def close_application(root):
-#    print(f"[D01_display_v4]close_application")
-#    stop_camera_thread()
-#    release_camera()
-#    pygame.quit() #追加
-#    root.destroy()
+    root.destroy()
 
 def show_opening(game):
     """オープニング画面を表示する（pygame版）"""
@@ -130,10 +110,6 @@ def show_opening(game):
     # pygameの初期化
     pygame.init()
     pygame.font.init()
-    # リアルタイム性を高めるため、UI側でバッファサイズ（512）を指定してミキサーを初期化
-#    pygame.mixer.init(frequency=44100, size=-16, channels=2, buffer=512)
-    C05_sound.play_sound("opening")
-
 
     # 画面サイズとタイトルの設定（tkinter版の800x600に合わせる）
     screen = pygame.display.set_mode((800, 600))
@@ -195,10 +171,13 @@ def show_opening(game):
         clock.tick(30) # 30 FPSに制限
 
     # pygameのウィンドウを確実に閉じる
-#    pygame.quit()
+    # 画面遷移のたびにpygame.quit()すると、Macで次のウィンドウ作成時に固まることがあるため、
+    # ここでは終了せず、次の画面のset_mode()でウィンドウを作り直す。
+    # （プログラムを終了するときだけ、下のexit分岐でpygame.quit()する）
 
     # ループを抜けた後の処理（tkinterへのバトンタッチ）
     if next_screen == "exit":
+        pygame.quit()
         # 共通の終了処理を呼び出す
         # 本来rootを渡す設計なので、ここではダミーのオブジェクトか個別の終了処理を行う必要があります
         # 暫定的にカメラを止めて終了させます
@@ -208,6 +187,14 @@ def show_opening(game):
         # 次の画面（tkinterのshow_selectなど）を表示
         display(game)
 
+
+
+# 選択画面に並べる問題の一覧（ボタンの表示名, 問題JSONのファイル名）
+# 問題を増やすときは、ここに1行足してJSONを data/problems/ に置く
+PROBLEM_LIST = [
+    ("家", "p001_house001.json"),
+    ("三角形", "p002_triangle001.json"),
+]
 
 
 def show_select(game):
@@ -222,20 +209,19 @@ def show_select(game):
     screen = pygame.display.set_mode((800, 600))
     pygame.display.set_caption("シルエットパズル")
 
-    # フォントの設定（環境に合わせて適宜変更してください）
     font_title = jp_font(40)
     font_button = jp_font(24)
 
-    # テキストオブジェクトの作成
     title_surface = font_title.render("パズルを選んでください", True, (0, 0, 0))
-    button_surface = font_button.render("家", True, (255, 255, 255))
+    title_rect = title_surface.get_rect(center=(400, 120))
 
-    # 配置座標の計算
-    title_rect = title_surface.get_rect(center=(400, 150))
-    
-    # 「家」ボタンの範囲（x, y, width, height）
-    button_rect = pygame.Rect(320, 300, 160, 50)
-    button_text_rect = button_surface.get_rect(center=button_rect.center)
+    # PROBLEM_LISTから、問題の数だけボタンを縦に並べて作る
+    buttons = []
+    for i, (label, filename) in enumerate(PROBLEM_LIST):
+        rect = pygame.Rect(320, 240 + i * 80, 160, 50)
+        text_surface = font_button.render(label, True, (255, 255, 255))
+        text_rect = text_surface.get_rect(center=rect.center)
+        buttons.append((rect, text_surface, text_rect, label, filename))
 
     clock = pygame.time.Clock()
     running = True
@@ -252,16 +238,16 @@ def show_select(game):
                 # 右上の×ボタンが押された場合
                 running = False
                 next_screen = "exit"
-                
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1: # 左クリック
-                    if button_rect.collidepoint(event.pos):
-                        print("[D01_display] 「家」が選択されました")
 
-                        # ----------------------------------------
-                        # 元のtkinter版にあったJSON読み込み処理
-                        # ----------------------------------------
-                        json_file = C02_config.PROBLEM_DIR / "p001_house001.json"
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:  # 左クリック
+                    for rect, _, _, label, filename in buttons:
+                        if not rect.collidepoint(event.pos):
+                            continue
+
+                        print(f"[D01_display] 「{label}」が選択されました")
+
+                        json_file = C02_config.PROBLEM_DIR / filename
                         problem = load_problem(json_file)
 
                         # コンソールに問題情報を表示
@@ -274,36 +260,39 @@ def show_select(game):
                         # ゲーム状態をQUIZに変更
                         game.select_problem(problem)
                         print(f"[D01_display] 現在の画面: {game.get_screen()}")
+
                         running = False
                         next_screen = "display"
+                        break
 
-        # マウスホバー時のボタン色変更演出
+        # ボタンの描画（マウスが乗っているボタンは明るい緑にする）
         mouse_pos = pygame.mouse.get_pos()
-        if button_rect.collidepoint(mouse_pos):
-            pygame.draw.rect(screen, (0, 150, 100), button_rect) # ホバー時は明るい緑
-        else:
-            pygame.draw.rect(screen, (0, 100, 50), button_rect)  # 通常時は濃い緑
-
-        # 描画
         screen.blit(title_surface, title_rect)
-        screen.blit(button_surface, button_text_rect)
+
+        for rect, text_surface, text_rect, _, _ in buttons:
+            if rect.collidepoint(mouse_pos):
+                pygame.draw.rect(screen, (0, 150, 100), rect)
+            else:
+                pygame.draw.rect(screen, (0, 100, 50), rect)
+            screen.blit(text_surface, text_rect)
 
         pygame.display.flip()
-        clock.tick(30) # 30 FPSに制限
+        clock.tick(30)  # 30 FPSに制限
 
     # pygameのウィンドウを閉じる
-#    pygame.quit()
+    # 画面遷移のたびにpygame.quit()すると、Macで次のウィンドウ作成時に固まることがあるため、
+    # ここでは終了せず、次の画面のset_mode()でウィンドウを作り直す。
+    # （プログラムを終了するときだけ、下のexit分岐でpygame.quit()する）
 
     # ループ終了後の処理
     if next_screen == "exit":
-        close_application()
-
-#        stop_camera_thread()
-#        release_camera()
-#        import sys
-#        sys.exit()
+        pygame.quit()
+        stop_camera_thread()
+        release_camera()
+        import sys
+        sys.exit()
     elif next_screen == "display":
-        # 次の画面（tkinterのshow_quizなど）を表示
+        # 次の画面を表示
         display(game)
 
 
@@ -467,10 +456,13 @@ def show_quiz(game):
         clock.tick(30)
 
     # pygameのウィンドウを閉じる
-#    pygame.quit()
+    # 画面遷移のたびにpygame.quit()すると、Macで次のウィンドウ作成時に固まることがあるため、
+    # ここでは終了せず、次の画面のset_mode()でウィンドウを作り直す。
+    # （プログラムを終了するときだけ、下のexit分岐でpygame.quit()する）
 
     # 次の画面へ遷移
     if next_screen == "exit":
+        pygame.quit()
         import sys
         sys.exit()
     elif next_screen == "display":
@@ -547,7 +539,9 @@ def show_correct(game):
         clock.tick(30) # 30 FPSに制限
 
     # pygameのウィンドウを閉じる
-#    pygame.quit()
+    # 画面遷移のたびにpygame.quit()すると、Macで次のウィンドウ作成時に固まることがあるため、
+    # ここでは終了せず、次の画面のset_mode()でウィンドウを作り直す。
+    # （プログラムを終了するときだけ、下のexit分岐でpygame.quit()する）
 
     # 次の画面（show_select）を表示
     display(game)
@@ -626,7 +620,9 @@ def show_incorrect(game):
         clock.tick(30) # 30 FPSに制限
 
     # pygameのウィンドウを閉じる
-#    pygame.quit() #aaaaaa
+    # 画面遷移のたびにpygame.quit()すると、Macで次のウィンドウ作成時に固まることがあるため、
+    # ここでは終了せず、次の画面のset_mode()でウィンドウを作り直す。
+    # （プログラムを終了するときだけ、下のexit分岐でpygame.quit()する）
 
     # 次の画面（show_quiz）を表示
     display(game)
@@ -639,28 +635,18 @@ def display(game):
     screen = game.get_screen()
 
     if screen == SCREEN_OPENING:
-        # クリック音
-        C05_sound.play_sound("opening")
         show_opening(game)
 
     elif screen == SCREEN_SELECT:
-        # クリック音
-        C05_sound.play_sound("button")
         show_select(game)
 
     elif screen == SCREEN_QUIZ:
-        # クリック音
-        C05_sound.play_sound("button")
         show_quiz(game)
 
     elif screen == SCREEN_CORRECT:
-        # クリック音
-        C05_sound.play_sound("True")
         show_correct(game)
 
     elif screen == SCREEN_INCORRECT:
-        # クリック音
-        C05_sound.play_sound("False")
         show_incorrect(game)
 
     else:

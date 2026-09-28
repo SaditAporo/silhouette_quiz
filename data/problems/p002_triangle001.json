@@ -1,0 +1,15 @@
+{
+  "id": "p002_triangle001",
+  "name": "三角形",
+  "image": "triangle001.png",
+  "animation": "triangle001.gif",
+  "areas": [
+    {
+      "shape": "triangle",
+      "color": null,
+      "centerX": 960,
+      "centerY": 540,
+      "rotation": 0
+    }
+  ]
+}
