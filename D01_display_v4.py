@@ -255,6 +255,25 @@ def show_quiz(game):
         """チェックボタンが押されたときの処理"""
         print("[D01_display] チェックボタンが押されました")
 
+        # 1. チェックボタンが押された時点の最新カメラ画像を取得
+        current_frame = get_latest_frame()
+        
+        if current_frame is None:
+            print("[D01_display]エラー: カメラ画像を取得できませんでした。")
+            return
+        
+        # 2. B02の認識処理を呼び出し、画像から図形の座標・角度・形状などを取得
+        from B02_recognition import recognize_shapes
+        recognized_shapes = recognize_shapes(current_frame)
+
+        # 3. 認識結果をGameオブジェクトに保存
+        game.set_recognized_shapes(recognized_shapes)
+
+        # デバッグ確認用（取得できたJSONデータをコンソールに表示）
+        import json
+        print("[D01_display] 認識された図形データ(JSON):")
+        print(json.dumps(recognized_shapes, indent=2, ensure_ascii=False))
+        
         # C04で正解判定
         from C04_answer_checker import check_answer as judge_answer
 
@@ -277,7 +296,8 @@ def show_quiz(game):
             f"{game.get_screen()}"
         )
 
-        # 現在のQUIZ画面を閉じる
+        # 現在のQUIZ画面を閉じる前にカメラを停止
+        stop_camera_thread()
         root.destroy()
 
         # 判定結果の画面を表示
