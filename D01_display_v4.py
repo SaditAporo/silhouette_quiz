@@ -1,6 +1,7 @@
 #import tkinter as tk
 from A01_problem_data import load_problem
 import C02_config
+import C05_sound
 import cv2
 from PIL import Image, ImageTk
 import os
@@ -98,9 +99,34 @@ from B01_camera_v1 import (
     get_latest_frame
 )
 
+def close_application():
+    """pygameアプリケーションを完全に終了する"""
+    print("[D01_display] アプリケーションを終了します")
+
+    # カメラスレッドを停止
+
 def close_application(root):
     stop_camera_thread()
+    
+    
+    # カメラを解放
     release_camera()
+    
+    
+    # pygameを終了
+    pygame.quit()
+
+    # Pythonプログラムを終了
+    import sys
+    sys.exit()
+
+#def close_application(root):
+#    print(f"[D01_display_v4]close_application")
+#    stop_camera_thread()
+#    release_camera()
+#    pygame.quit() #追加
+#    root.destroy()
+
     root.destroy()
 
 def show_opening(game):
@@ -110,6 +136,11 @@ def show_opening(game):
     # pygameの初期化
     pygame.init()
     pygame.font.init()
+        # リアルタイム性を高めるため、UI側でバッファサイズ（512）を指定してミキサーを初期化
+#    pygame.mixer.init(frequency=44100, size=-16, channels=2, buffer=512)
+    C05_sound.play_sound("opening")
+
+
 
     # 画面サイズとタイトルの設定（tkinter版の800x600に合わせる）
     screen = pygame.display.set_mode((800, 600))
@@ -209,9 +240,11 @@ def show_select(game):
     screen = pygame.display.set_mode((800, 600))
     pygame.display.set_caption("シルエットパズル")
 
+    # フォントの設定（環境に合わせて適宜変更してください）
     font_title = jp_font(40)
     font_button = jp_font(24)
-
+    
+    # テキストオブジェクトの作成
     title_surface = font_title.render("パズルを選んでください", True, (0, 0, 0))
     title_rect = title_surface.get_rect(center=(400, 120))
 
