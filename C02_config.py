@@ -18,6 +18,11 @@ PROBLEM_DIR = BASE_DIR / "data" / "problems"
 ANIMATION_DIR = BASE_DIR / "data" / "animations"
 
 
+# フォントデータ（日本語フォントを同梱して、OSによる文字化けを防ぐ）
+# このフォルダに .ttf / .otf ファイルを置く（例: NotoSansJP-Regular.ttf）
+FONT_DIR = BASE_DIR / "assets" / "fonts"
+
+
 # ウィンドウ設定
 WINDOW_TITLE = "シルエットパズル"
 
@@ -38,6 +43,23 @@ POSITION_TOLERANCE = 80
 
 # 角度のズレの許容範囲（度）
 ROTATION_TOLERANCE = 25
+
+
+# ========================================
+# 白い紙の検出条件（B02_recognitionで使用）
+# 明るさだけでなく「彩度の低さ（色味の薄さ）」も条件にすることで、
+# 木目の机・棚など「明るいが色がついている物」を誤検出しにくくする。
+# 「Threshold Debug」ウィンドウを見ながら、白く映ってほしい所が
+# 黒くなっていればPAPER_MIN_VALUEを下げる、
+# 逆に背景が白く映ってしまうならPAPER_MAX_SATURATIONを下げる、
+# という方向で調整する。
+# ========================================
+
+# 紙とみなす最低の明度（0〜255、大きいほど明るいものだけを拾う）
+PAPER_MIN_VALUE = 140
+
+# 紙とみなす最大の彩度（0〜255、小さいほど「白っぽいもの」だけに絞られる）
+PAPER_MAX_SATURATION = 70
 
 
 def get_problem_dir():
