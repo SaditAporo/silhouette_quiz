@@ -42,7 +42,7 @@ CAMERA_INDEX = 0
 # ========================================
 
 # 位置のズレの許容範囲（ピクセル）
-POSITION_TOLERANCE = 80
+POSITION_TOLERANCE = 240
 
 # 角度のズレの許容範囲（度）
 ROTATION_TOLERANCE = 25
