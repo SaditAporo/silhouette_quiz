@@ -1,6 +1,7 @@
 #import tkinter as tk
 from A01_problem_data import load_problem
 import C02_config
+import C05_sound
 import cv2
 from PIL import Image, ImageTk
 import os
@@ -98,10 +99,29 @@ from B01_camera_v1 import (
     get_latest_frame
 )
 
-def close_application(root):
+def close_application():
+    """pygameアプリケーションを完全に終了する"""
+    print("[D01_display] アプリケーションを終了します")
+
+    # カメラスレッドを停止
     stop_camera_thread()
+
+    # カメラを解放
     release_camera()
-    root.destroy()
+
+    # pygameを終了
+    pygame.quit()
+
+    # Pythonプログラムを終了
+    import sys
+    sys.exit()
+
+#def close_application(root):
+#    print(f"[D01_display_v4]close_application")
+#    stop_camera_thread()
+#    release_camera()
+#    pygame.quit() #追加
+#    root.destroy()
 
 def show_opening(game):
     """オープニング画面を表示する（pygame版）"""
@@ -110,6 +130,10 @@ def show_opening(game):
     # pygameの初期化
     pygame.init()
     pygame.font.init()
+    # リアルタイム性を高めるため、UI側でバッファサイズ（512）を指定してミキサーを初期化
+#    pygame.mixer.init(frequency=44100, size=-16, channels=2, buffer=512)
+    C05_sound.play_sound("opening")
+
 
     # 画面サイズとタイトルの設定（tkinter版の800x600に合わせる）
     screen = pygame.display.set_mode((800, 600))
@@ -171,7 +195,7 @@ def show_opening(game):
         clock.tick(30) # 30 FPSに制限
 
     # pygameのウィンドウを確実に閉じる
-    pygame.quit()
+#    pygame.quit()
 
     # ループを抜けた後の処理（tkinterへのバトンタッチ）
     if next_screen == "exit":
@@ -250,7 +274,6 @@ def show_select(game):
                         # ゲーム状態をQUIZに変更
                         game.select_problem(problem)
                         print(f"[D01_display] 現在の画面: {game.get_screen()}")
-
                         running = False
                         next_screen = "display"
 
@@ -269,14 +292,16 @@ def show_select(game):
         clock.tick(30) # 30 FPSに制限
 
     # pygameのウィンドウを閉じる
-    pygame.quit()
+#    pygame.quit()
 
     # ループ終了後の処理
     if next_screen == "exit":
-        stop_camera_thread()
-        release_camera()
-        import sys
-        sys.exit()
+        close_application()
+
+#        stop_camera_thread()
+#        release_camera()
+#        import sys
+#        sys.exit()
     elif next_screen == "display":
         # 次の画面（tkinterのshow_quizなど）を表示
         display(game)
@@ -442,7 +467,7 @@ def show_quiz(game):
         clock.tick(30)
 
     # pygameのウィンドウを閉じる
-    pygame.quit()
+#    pygame.quit()
 
     # 次の画面へ遷移
     if next_screen == "exit":
@@ -522,7 +547,7 @@ def show_correct(game):
         clock.tick(30) # 30 FPSに制限
 
     # pygameのウィンドウを閉じる
-    pygame.quit()
+#    pygame.quit()
 
     # 次の画面（show_select）を表示
     display(game)
@@ -601,7 +626,7 @@ def show_incorrect(game):
         clock.tick(30) # 30 FPSに制限
 
     # pygameのウィンドウを閉じる
-    pygame.quit()
+#    pygame.quit() #aaaaaa
 
     # 次の画面（show_quiz）を表示
     display(game)
@@ -614,18 +639,28 @@ def display(game):
     screen = game.get_screen()
 
     if screen == SCREEN_OPENING:
+        # クリック音
+        C05_sound.play_sound("opening")
         show_opening(game)
 
     elif screen == SCREEN_SELECT:
+        # クリック音
+        C05_sound.play_sound("button")
         show_select(game)
 
     elif screen == SCREEN_QUIZ:
+        # クリック音
+        C05_sound.play_sound("button")
         show_quiz(game)
 
     elif screen == SCREEN_CORRECT:
+        # クリック音
+        C05_sound.play_sound("True")
         show_correct(game)
 
     elif screen == SCREEN_INCORRECT:
+        # クリック音
+        C05_sound.play_sound("False")
         show_incorrect(game)
 
     else:
