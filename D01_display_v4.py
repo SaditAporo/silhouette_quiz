@@ -3,7 +3,83 @@ from A01_problem_data import load_problem
 import C02_config
 import cv2
 from PIL import Image, ImageTk
+import os
 import pygame
+
+
+# ----------------------------------------
+# 日本語フォントの取得
+# 優先順位:
+#   1. assets/fonts/ に同梱したフォント（全員が同じ見た目になる）
+#   2. OSに入っている日本語フォント（同梱フォントが無い場合の代わり）
+# "msgothic" などOS固有のフォント名を直書きすると、
+# そのフォントが無いPCでは日本語が「□」に文字化けするため。
+# ----------------------------------------
+_JP_FONT_NAMES = (
+    "hiraginosans,hiraginokakugothicpron,hiraginokakugothicpro,"
+    "arialunicode,yugothic,meiryo,msgothic,notosanscjkjp,takaoexgothic"
+)
+
+_JP_FONT_FILE_CANDIDATES = [
+    # Mac
+    "/System/Library/Fonts/ヒラギノ角ゴシック W3.ttc",
+    "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
+    "/Library/Fonts/Arial Unicode.ttf",
+    # Windows
+    "C:/Windows/Fonts/meiryo.ttc",
+    "C:/Windows/Fonts/msgothic.ttc",
+]
+
+_jp_font_path = None
+_jp_font_searched = False
+
+
+def _find_jp_font_path():
+    """日本語表示に使えるフォントファイルのパスを探す（結果は使い回す）"""
+    global _jp_font_path, _jp_font_searched
+
+    if _jp_font_searched:
+        return _jp_font_path
+
+    _jp_font_searched = True
+
+    path = None
+
+    # 1. プロジェクトに同梱したフォントを探す
+    font_dir = C02_config.FONT_DIR
+    if font_dir.exists():
+        bundled = sorted(
+            f for f in font_dir.iterdir()
+            if f.suffix.lower() in (".ttf", ".otf", ".ttc")
+        )
+        if bundled:
+            path = str(bundled[0])
+
+    # 2. なければ、OSのフォント名の候補から探す
+    if path is None:
+        path = pygame.font.match_font(_JP_FONT_NAMES)
+
+    # 3. それでも見つからなければ、よくある場所のファイルを直接探す
+    if path is None:
+        for candidate in _JP_FONT_FILE_CANDIDATES:
+            if os.path.exists(candidate):
+                path = candidate
+                break
+
+    if path is None:
+        print("[D01_display] 警告: 日本語フォントが見つかりません（文字化けします）")
+        print(f"[D01_display] {font_dir} にフォント(.ttf)を置いてください")
+    else:
+        print(f"[D01_display] 日本語フォント: {path}")
+
+    _jp_font_path = path
+    return _jp_font_path
+
+
+def jp_font(size):
+    """日本語が表示できるpygameのフォントを返す"""
+    path = _find_jp_font_path()
+    return pygame.font.Font(path, size)
 
 from C03_game import (
     Game,
@@ -41,8 +117,8 @@ def show_opening(game):
 
     # フォントの設定（日本語を表示するためにシステムフォントを使用）
     # 環境に合わせて適宜フォント名は変更してください（MS Gothic, Arial等）
-    font_title = pygame.font.SysFont("msgothic", 48)
-    font_button = pygame.font.SysFont("msgothic", 24)
+    font_title = jp_font(48)
+    font_button = jp_font(24)
 
     # テキストオブジェクトの作成
     title_surface = font_title.render("シルエットパズル", True, (0, 0, 0)) # 黒色
@@ -123,8 +199,8 @@ def show_select(game):
     pygame.display.set_caption("シルエットパズル")
 
     # フォントの設定（環境に合わせて適宜変更してください）
-    font_title = pygame.font.SysFont("msgothic", 40)
-    font_button = pygame.font.SysFont("msgothic", 24)
+    font_title = jp_font(40)
+    font_button = jp_font(24)
 
     # テキストオブジェクトの作成
     title_surface = font_title.render("パズルを選んでください", True, (0, 0, 0))
@@ -225,10 +301,10 @@ def show_quiz(game):
     start_camera_thread()
 
     # フォントの設定
-    font_title = pygame.font.SysFont("msgothic", 36)
-    font_frame_title = pygame.font.SysFont("msgothic", 20)
-    font_label = pygame.font.SysFont("msgothic", 24)
-    font_button = pygame.font.SysFont("msgothic", 24)
+    font_title = jp_font(36)
+    font_frame_title = jp_font(20)
+    font_label = jp_font(24)
+    font_button = jp_font(24)
 
     # 問題タイトルの作成
     problem_name = game.current_problem["name"]
@@ -389,8 +465,8 @@ def show_correct(game):
     pygame.display.set_caption("シルエットパズル")
 
     # フォントの設定
-    font_message = pygame.font.SysFont("msgothic", 60)
-    font_button = pygame.font.SysFont("msgothic", 24)
+    font_message = jp_font(60)
+    font_button = jp_font(24)
 
     # テキストオブジェクトの作成
     # 「せいかい！」は目立つように赤色（255, 0, 0）にしています
@@ -465,9 +541,9 @@ def show_incorrect(game):
     pygame.display.set_caption("シルエットパズル")
 
     # フォントの設定
-    font_message = pygame.font.SysFont("msgothic", 60)
-    font_hint = pygame.font.SysFont("msgothic", 24)
-    font_button = pygame.font.SysFont("msgothic", 20)
+    font_message = jp_font(60)
+    font_hint = jp_font(24)
+    font_button = jp_font(20)
 
     # テキストオブジェクトの作成
     # 「ざんねん！」は少し暗めの青（0, 50, 150）にしています
