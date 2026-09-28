@@ -22,6 +22,9 @@ ANIMATION_DIR = BASE_DIR / "data" / "animations"
 # このフォルダに .ttf / .otf ファイルを置く（例: NotoSansJP-Regular.ttf）
 FONT_DIR = BASE_DIR / "assets" / "fonts"
 
+# サウンドデータ
+SOUND_DIR = BASE_DIR / "assets" / "sounds"
+
 
 # ウィンドウ設定
 WINDOW_TITLE = "シルエットパズル"
