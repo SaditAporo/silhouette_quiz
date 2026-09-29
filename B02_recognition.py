@@ -82,10 +82,12 @@ def recognize_shapes(frame):
         # (A) 丸（circle）判定：円形度が高く、特定の丸状である場合
         if circularity >= 0.72:
             shape_name = "circle"
+            contour_color = (0,0,255) #red
 
         # (B) 三角形（triangle）判定：頂点数が3、または頂点数が4未満で円形度が低い場合
         elif num_vertices == 3:
             shape_name = "triangle"
+            contour_color = (0,255,0) #green
 
         # (C) 四角形（square / rectangle）判定：頂点数 4 付近
         elif num_vertices == 4 or (3 < num_vertices <= 6 and circularity < 0.70):
@@ -98,18 +100,23 @@ def recognize_shapes(frame):
             # 正方形（アスペクト比が 1.0 に近い） vs 長方形
             if aspect_ratio <= 1.25:
                 shape_name = "square"
+                contour_color = (255, 0, 0) #blue
             else:
                 shape_name = "rectangle"
+                contour_color = (255,165,0) #orange
 
         # それ以外の頂点数が多い場合は、近似処理を強めて再判定
         else:
             approx_coarse = cv2.approxPolyDP(cnt, 0.05 * peri, True)
             if len(approx_coarse) == 3:
                 shape_name = "triangle"
+                contour_color = (0,255,0) #green
             elif len(approx_coarse) == 4:
                 shape_name = "square" if rect_w / max(rect_h, 1) <= 1.25 else "rectangle"
+                contour_color = (255, 0, 0) if shape_name == "square" else (255, 165, 0)
             elif circularity >= 0.65:
                 shape_name = "circle"
+                contour_color = (0,0,255) #red
             else:
                 # 定義外の多角形は判定スキップ（または除外）
                 continue
@@ -140,7 +147,7 @@ def recognize_shapes(frame):
         shape_info = {
             "id": shape_count,
             "shape": shape_name,
-            "color": None,
+            "color": contour_color, #輪郭の色を追加
             "centerX": cx,
             "centerY": cy,
             "rotation": round(rotation_deg, 2),
@@ -166,7 +173,12 @@ def draw_recognition_result(frame, recognized_shapes):
         cy = item["centerY"]
         shape_name = item["shape"]
         rotation = item["rotation"]
+        color = item["color"] #jsonから色を取得
+        vertices = np.array([[[pt["x"], pt["y"]]] for pt in item["vertices"]], dtype=np.int32) # 頂点座標をnp.arrayに変換
 
+        # 輪郭を描画
+        cv2.drawContours(output_frame, [vertices], -1, color, 2)
+        
         # 中心点
         cv2.circle(output_frame, (cx, cy), 6, (0, 0, 255), -1)
 
@@ -178,7 +190,7 @@ def draw_recognition_result(frame, recognized_shapes):
             (cx - 40, cy - 12),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.6,
-            (0, 255, 0),
+            color, #図形と同じ色でテキストを描画
             2
         )
 
