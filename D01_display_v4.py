@@ -1,6 +1,7 @@
 import tkinter as tk
 from A01_problem_data import load_problem
 import C02_config
+from B02_recognition import recognize_shapes, draw_recognition_result
 
 from C03_game import (
     Game,
@@ -321,15 +322,28 @@ def show_quiz(game):
         frame = get_latest_frame()
 
         if frame is not None:
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            # --------------------------------------------------
+            # 1. 右側：生カメラ画像の更新
+            # --------------------------------------------------
+            raw_frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            raw_image = Image.fromarray(raw_frame_rgb).resize((400, 300))
+            raw_photo = ImageTk.PhotoImage(raw_image)
 
-            image = Image.fromarray(frame)
-            image = image.resize((600, 450))
+            camera_label.configure(image=raw_photo)
+            camera_label.image = raw_photo
 
-            photo = ImageTk.PhotoImage(image)
+            # --------------------------------------------------
+            # 2. 中央：認識結果（図形ラベル・中心点つき）の更新
+            # --------------------------------------------------
+            shapes = recognize_shapes(frame)  # B02で図形認識
+            rec_frame = draw_recognition_result(frame, shapes)  # 結果を描画
 
-            camera_label.configure(image=photo)
-            camera_label.image = photo
+            rec_frame_rgb = cv2.cvtColor(rec_frame, cv2.COLOR_BGR2RGB)
+            rec_image = Image.fromarray(rec_frame_rgb).resize((400, 300))
+            rec_photo = ImageTk.PhotoImage(rec_image)
+
+            recognition_label.configure(image=rec_photo)
+            recognition_label.image = rec_photo
 
         root.after(30, update_camera_image)
 
