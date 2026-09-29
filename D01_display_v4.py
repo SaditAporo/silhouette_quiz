@@ -1,14 +1,12 @@
 #import tkinter as tk
 from A01_problem_data import load_problem
 import C02_config
-<<<<<<< HEAD
-from B02_recognition import recognize_shapes, draw_recognition_result
-=======
 import C05_sound
 import cv2
 from PIL import Image, ImageTk
 import os
 import pygame
+from B02_recognition import recognize_shapes, draw_recognition_result
 
 
 # ----------------------------------------
@@ -84,7 +82,6 @@ def jp_font(size):
     """日本語が表示できるpygameのフォントを返す"""
     path = _find_jp_font_path()
     return pygame.font.Font(path, size)
->>>>>>> d0f3cfe180537b93aca400242b44d8a95fb103ff
 
 from C03_game import (
     Game,
@@ -348,227 +345,6 @@ def show_quiz(game):
     # ----------------------------------------
     # カメラ関連の初期化とスレッド開始
     # ----------------------------------------
-<<<<<<< HEAD
-
-    problem_name = game.current_problem["name"]
-
-    title_label = tk.Label(
-        root,
-        text=f"問題：{problem_name}",
-        font=("Arial", 28)
-    )
-    title_label.pack(pady=20)
-
-    # ----------------------------------------
-    # 3つの表示領域
-    # ----------------------------------------
-
-    display_frame = tk.Frame(root)
-    display_frame.pack(
-        expand=True,
-        fill="both",
-        padx=30,
-        pady=20
-    )
-
-    # シルエット
-    silhouette_frame = tk.LabelFrame(
-        display_frame,
-        text="シルエット",
-        font=("Arial", 18)
-    )
-    silhouette_frame.pack(
-        side="left",
-        expand=True,
-        fill="both",
-        padx=10
-    )
-
-    silhouette_label = tk.Label(
-        silhouette_frame,
-        text="家\n（シルエット画像）",
-        font=("Arial", 24)
-    )
-    silhouette_label.pack(
-        expand=True
-    )
-
-    # 認識結果
-    recognition_frame = tk.LabelFrame(
-        display_frame,
-        text="認識結果",
-        font=("Arial", 18)
-    )
-    recognition_frame.pack(
-        side="left",
-        expand=True,
-        fill="both",
-        padx=10
-    )
-
-    recognition_label = tk.Label(
-        recognition_frame,
-        text="認識結果\n（仮）",
-        font=("Arial", 24)
-    )
-    recognition_label.pack(
-        expand=True
-    )
-
-    # カメラ画像
-    camera_frame = tk.LabelFrame(
-        display_frame,
-        text="カメラ画像",
-        font=("Arial", 18)
-    )
-    camera_frame.pack(
-        side="left",
-        expand=True,
-        fill="both",
-        padx=10
-    )
-
-    camera_label = tk.Label(
-        camera_frame,
-        text="カメラ画像\n（仮）",
-        font=("Arial", 24)
-    )
-    camera_label.pack(
-        expand=True
-    )
-
-    # ----------------------------------------
-    # 下部のボタン
-    # ----------------------------------------
-
-    button_frame = tk.Frame(root)
-    button_frame.pack(
-        pady=20
-    )
-
-    def on_check_button():
-        """チェックボタンが押されたときの処理"""
-        print("[D01_display] チェックボタンが押されました")
-
-        # 1. チェックボタンが押された時点の最新カメラ画像を取得
-        current_frame = get_latest_frame()
-        
-        if current_frame is None:
-            print("[D01_display]エラー: カメラ画像を取得できませんでした。")
-            return
-        
-        # 2. B02の認識処理を呼び出し、画像から図形の座標・角度・形状などを取得
-        from B02_recognition import recognize_shapes
-        recognized_shapes = recognize_shapes(current_frame)
-
-        # 3. 認識結果をGameオブジェクトに保存
-        game.set_recognized_shapes(recognized_shapes)
-
-        # デバッグ確認用（取得できたJSONデータをコンソールに表示）
-        import json
-        print("[D01_display] 認識された図形データ(JSON):")
-        print(json.dumps(recognized_shapes, indent=2, ensure_ascii=False))
-        
-        # C04で正解判定
-        from C04_answer_checker import check_answer as judge_answer
-
-        result, feedback = judge_answer(
-            game.current_problem,
-            game.recognized_shapes
-        )
-
-        print(f"[D01_display] 判定結果: {result}")
-        print(f"[D01_display] フィードバック: {feedback}")
-
-        # C03に判定結果を渡す
-        game.set_answer_result(
-            result,
-            feedback
-        )
-
-        print(
-            f"[D01_display] 次の画面: "
-            f"{game.get_screen()}"
-        )
-
-        # 現在のQUIZ画面を閉じる前にカメラを停止
-        stop_camera_thread()
-        root.destroy()
-
-        # 判定結果の画面を表示
-        display(game)
-
-    # もどるボタン
-    def on_return_button():
-        stop_camera_thread()
-        game.back_to_select()
-        root.destroy()
-        display(game)
-
-    # 右上の×ボタン
-    def on_close():
-        stop_camera_thread()
-        release_camera()
-        root.destroy()
-
-    # カメラ画面の更新
-    def update_camera_image():
-        frame = get_latest_frame()
-
-        if frame is not None:
-            # --------------------------------------------------
-            # 1. 右側：生カメラ画像の更新
-            # --------------------------------------------------
-            raw_frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            raw_image = Image.fromarray(raw_frame_rgb).resize((400, 300))
-            raw_photo = ImageTk.PhotoImage(raw_image)
-
-            camera_label.configure(image=raw_photo)
-            camera_label.image = raw_photo
-
-            # --------------------------------------------------
-            # 2. 中央：認識結果（図形ラベル・中心点つき）の更新
-            # --------------------------------------------------
-            shapes = recognize_shapes(frame)  # B02で図形認識
-            rec_frame = draw_recognition_result(frame, shapes)  # 結果を描画
-
-            rec_frame_rgb = cv2.cvtColor(rec_frame, cv2.COLOR_BGR2RGB)
-            rec_image = Image.fromarray(rec_frame_rgb).resize((400, 300))
-            rec_photo = ImageTk.PhotoImage(rec_image)
-
-            recognition_label.configure(image=rec_photo)
-            recognition_label.image = rec_photo
-
-        root.after(30, update_camera_image)
-
-
-    check_button = tk.Button(
-        button_frame,
-        text="チェック",
-        font=("Arial", 20),
-        width=12,
-        command=on_check_button
-    )
-    check_button.pack(
-        side="left",
-        padx=20
-    )
-
-    back_button = tk.Button(
-        button_frame,
-        text="もどる",
-        font=("Arial", 20),
-        width=12,
-        command=on_return_button
-    )
-    back_button.pack(
-        side="left",
-        padx=20
-    )
-
-    # カメラ関連
-=======
->>>>>>> d0f3cfe180537b93aca400242b44d8a95fb103ff
     initialize_camera()
     start_camera_thread()
 
@@ -674,24 +450,35 @@ def show_quiz(game):
         screen.blit(rec_label, (frame_recognition_x + 130, frame_y + 240))
 
 
-        # 3. 最新のカメラ画像を取得して、白地の上に重ねて描画
+        # 3. 最新のカメラ画像を取得して、認識結果とカメラ画像をそれぞれ描画
         frame = get_latest_frame()
         if frame is not None:
-            # OpenCV (BGR) から pygame (RGB) へ変換
+            # OpenCV (BGR) のまま認識処理と描画処理を行う
+            shapes = recognize_shapes(frame)
+            rec_frame = draw_recognition_result(frame, shapes) # 認識結果を描画した画像
+
+            # --- (A) カメラ画像の表示（右側） ---
             frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             frame_resized = cv2.resize(frame_rgb, (400, 300))
-            
-            # surfarrayの代わりに、より確実な image.frombuffer を使用してSurface化
-            # （OpenCVのshapeは (高さ, 幅, 色) のため、サイズ指定は (幅, 高さ) に反転させます）
             height, width, _ = frame_resized.shape
             frame_surface = pygame.image.frombuffer(frame_resized.tobytes(), (width, height), "RGB")
-            
-            # カメラフレーム内の白地の上（中央付近）に描画
             screen.blit(frame_surface, (frame_camera_x + 10, frame_y + 110))
+
+            # --- (B) 認識結果画像の表示（中央） ---
+            rec_rgb = cv2.cvtColor(rec_frame, cv2.COLOR_BGR2RGB)
+            rec_resized = cv2.resize(rec_rgb, (400, 300))
+            rec_height, rec_width, _ = rec_resized.shape
+            rec_surface = pygame.image.frombuffer(rec_resized.tobytes(), (rec_width, rec_height), "RGB")
+            screen.blit(rec_surface, (frame_recognition_x + 10, frame_y + 110))
+
+            # 最新の認識結果をgameオブジェクトに保存（チェックボタンで使用）
+            game.set_recognized_shapes(shapes)
+
         else:
             # カメラ画像がない場合の仮テキスト
             no_cam_txt = font_label.render("カメラ画像（準備中）", True, (150, 150, 150))
             screen.blit(no_cam_txt, (frame_camera_x + 110, frame_y + 240))
+            screen.blit(no_cam_txt, (frame_recognition_x + 110, frame_y + 240))
 
 
         # 4. ボタンのホバー処理と描画（最前面）
