@@ -1,8 +1,157 @@
 import json
 import math
+from collections import deque
 import cv2
 import numpy as np
 
+class ShapeTracker:
+
+    """
+    複数フレームにわたる図形の中心座標や角度を保持し、
+    移動平均によって時系列フィルタリング（平滑化）を行うクラス
+    """
+
+    def __init__(self, history_size=5, max_disappeared=5):
+        self.history_size = history_size  # 平均をとる過去フレーム数
+        self.max_disappeared = max_disappeared  # 消滅とみなす連続未検出フレーム数
+        self.next_id = 1
+        self.objects = {}  # {id: {"shape": str, "history": deque, "disappeared": int}}
+
+    def update(self, current_detections):
+        """現在のフレームで検出された図形群を受け取り、平滑化した結果を返す"""
+        updated_results = []
+
+        if not current_detections:
+            # 検出が無かった場合、未検出カウントを増やして古いものを消去
+            to_delete = []
+            for obj_id, obj in self.objects.items():
+                obj["disappeared"] += 1
+                if obj["disappeared"] > self.max_disappeared:
+                    to_delete.append(obj_id)
+            for obj_id in to_delete:
+                del self.objects[obj_id]
+            return updated_results
+
+        # 1. 既存の追跡対象と現在の検出結果のマッチング（最短距離による割り当て）
+        if not self.objects:
+            # 追跡対象が空の場合、すべて新規登録
+            for det in current_detections:
+                obj_id = self.next_id
+                self.next_id += 1
+                history = deque(maxlen=self.history_size)
+                history.append(det)
+                self.objects[obj_id] = {
+                    "shape": det["shape"],
+                    "history": history,
+                    "disappeared": 0,
+                }
+        else:
+            # 既存と新規の距離行列を計算
+            obj_ids = list(self.objects.keys())
+            obj_centers = [
+                (
+                    self.objects[oid]["history"][-1]["centerX"],
+                    self.objects[oid]["history"][-1]["centerY"],
+                )
+                for oid in obj_ids
+            ]
+            det_centers = [(d["centerX"], d["centerY"]) for d in current_detections]
+
+            matched_obj_indices = set()
+            matched_det_indices = set()
+
+            # 最も距離が近いペアからマッチング (閾値50px以内)
+            for det_idx, (dcx, dcy) in enumerate(det_centers):
+                best_dist = float("inf")
+                best_obj_idx = -1
+
+                for obj_idx, (ocx, ocy) in enumerate(obj_centers):
+                    if obj_idx in matched_obj_indices:
+                        continue
+                    # 形状が違うものはマッチングしない
+                    if (
+                        self.objects[obj_ids[obj_idx]]["shape"]
+                        != current_detections[det_idx]["shape"]
+                    ):
+                        continue
+
+                    dist = math.hypot(dcx - ocx, dcy - ocy)
+                    if dist < best_dist and dist < 50:  # 50px以内を同一物体と判定
+                        best_dist = dist
+                        best_obj_idx = obj_idx
+
+                if best_obj_idx != -1:
+                    matched_obj_indices.add(best_obj_idx)
+                    matched_det_indices.add(det_idx)
+
+                    # 履歴を更新
+                    oid = obj_ids[best_obj_idx]
+                    self.objects[oid]["history"].append(
+                        current_detections[det_idx]
+                    )
+                    self.objects[oid]["disappeared"] = 0
+
+            # 未マッチングの既存オブジェクトは未検出カウント加算
+            for obj_idx, oid in enumerate(obj_ids):
+                if obj_idx not in matched_obj_indices:
+                    self.objects[oid]["disappeared"] += 1
+
+            # 未マッチングの新規検出は新しく登録
+            for det_idx, det in enumerate(current_detections):
+                if det_idx not in matched_det_indices:
+                    obj_id = self.next_id
+                    self.next_id += 1
+                    history = deque(maxlen=self.history_size)
+                    history.append(det)
+                    self.objects[obj_id] = {
+                        "shape": det["shape"],
+                        "history": history,
+                        "disappeared": 0,
+                    }
+
+            # 規定フレーム数以上消滅したものを削除
+            to_delete = [
+                oid
+                for oid, obj in self.objects.items()
+                if obj["disappeared"] > self.max_disappeared
+            ]
+            for oid in to_delete:
+                del self.objects[oid]
+
+        # 2. 移動平均によるデータの平滑化計算
+        for obj_id, obj in self.objects.items():
+            if obj["disappeared"] > 0:
+                continue
+
+            hist = list(obj["history"])
+            avg_cx = int(sum(d["centerX"] for d in hist) / len(hist))
+            avg_cy = int(sum(d["centerY"] for d in hist) / len(hist))
+
+            # 角度（回転）の平均（円環上の平均に対応するためラジアンで計算）
+            sin_sum = sum(
+                math.sin(math.radians(d["rotation"])) for d in hist
+            )
+            cos_sum = sum(
+                math.cos(math.radians(d["rotation"])) for d in hist
+            )
+            avg_rot = (
+                math.degrees(math.atan2(sin_sum, cos_sum)) % 360.0
+            )
+
+            # 最新のフレーム情報をもとに中心・角度を平均値に置き換える
+            smoothed = hist[-1].copy()
+            smoothed["id"] = obj_id
+            smoothed["centerX"] = avg_cx
+            smoothed["centerY"] = avg_cy
+            smoothed["rotation"] = round(avg_rot, 2)
+
+            updated_results.append(smoothed)
+
+        return updated_results
+
+
+# グローバルでトラッカーのインスタンスを保持
+_tracker = ShapeTracker(history_size=5)
 
 def recognize_shapes(frame):
     """
@@ -62,15 +211,45 @@ def recognize_shapes(frame):
         if peri == 0:
             continue
 
-        # 円形度 (Circularity) = 4 * π * Area / (Perimeter^2)
+        # 円形度 (Circularity)
         circularity = (4 * math.pi * area) / (peri * peri)
 
-        # 最小外接矩形（回転角度と幅・高さ）
+        # 最小外接矩形（回転矩形）の取得
         rect = cv2.minAreaRect(cnt)
         (box_cx, box_cy), (rect_w, rect_h), angle = rect
 
-        # 輪郭近似（頂点数計算）
-        # 精度のために適正なイプシロン（0.03 * 周長）を設定
+        # --- 【補正1】アスペクト比の計算補正 ---
+        # 検出矩形の長辺と短辺を常に正しく整理する
+        long_side = max(rect_w, rect_h)
+        short_side = min(rect_w, rect_h)
+        
+        if short_side > 0:
+            aspect_ratio = long_side / short_side
+        else:
+            aspect_ratio = 1.0
+
+        # --- 【補正2】回転角度（0〜360度）の正規化・補正 ---
+        # cv2.minAreaRectの角度仕様（OpenCVのバージョンにより仕様差あり）の吸収
+        # 長辺（図形の主軸）の傾きベクトルから角度を算出する
+        box_points = cv2.boxPoints(rect)
+        box_points = np.int32(box_points)
+
+        # 矩形の頂点群から最も長い辺のベクトルを求める
+        max_len = 0
+        main_vector = (1, 0)
+        for i in range(4):
+            pt1 = box_points[i]
+            pt2 = box_points[(i + 1) % 4]
+            dist = math.hypot(pt2[0] - pt1[0], pt2[1] - pt1[1])
+            if dist > max_len:
+                max_len = dist
+                main_vector = (pt2[0] - pt1[0], pt2[1] - pt1[1])
+
+        # ベクトルから 0 ~ 180 度の角度を算出（長辺の向き）
+        calc_angle = math.degrees(math.atan2(main_vector[1], main_vector[0])) % 180.0
+        rotation_deg = round(calc_angle, 2)
+
+        # 頂点数計算（輪郭近似）
         approx = cv2.approxPolyDP(cnt, 0.03 * peri, True)
         num_vertices = len(approx)
 
