@@ -4,6 +4,40 @@ from collections import deque
 import cv2
 import numpy as np
 
+def calculate_shape_rotation(cnt, shape_name):
+    """図形の輪郭（cnt）と種別（shape_name）から、 水平（0度）からの傾き角度（0〜360度）を算出する"""
+    # 最小外接矩形（中心, (幅, 高さ), 傾き角）を取得
+    rect = cv2.minAreaRect(cnt)
+    (cx, cy), (w, h), angle = rect
+
+    # 矩形の4頂点を取得 (順序はOpenCVの仕様で固定)
+    box_pts = cv2.boxPoints(rect)
+
+    # 図形に応じて基準となるベクトルの向きを設定
+    if shape_name == "triangle":
+        # 三角形の場合は、一番長い辺（底辺とみなす）の向きを基準にする
+        max_len = 0
+        v_x, v_y = 1, 0
+        for i in range(3):
+            pt1 = box_pts[i]
+            pt2 = box_pts[(i + 1) % 4]
+            dist = math.hypot(pt2[0] - pt1[0], pt2[1] - pt1[1])
+            if dist > max_len:
+                max_len = dist
+                v_x = pt2[0] - pt1[0]
+                v_y = pt2[1] - pt1[1]
+    else:
+        # 長方形・正方形の場合、幅(w)に対応する辺のベクトルを取得
+        # (box_pts[1] -> box_pts[2] が幅方向のベクトル)
+        v_x = box_pts[2][0] - box_pts[1][0]
+        v_y = box_pts[2][1] - box_pts[1][1]
+
+    # ベクトルの角度（y軸下向き座標系を考慮）を求める
+    deg = math.degrees(math.atan2(v_y, v_x)) % 360.0
+
+    return round(deg, 2)
+
+
 class ShapeTracker:
 
     """
@@ -313,7 +347,7 @@ def recognize_shapes(frame):
         # ------------------------------------------------
         # 6. 回転角度の正規化 (0 ~ 360度)
         # ------------------------------------------------
-        rotation_deg = angle if angle >= 0 else angle + 360.0
+        rotation_deg = calculate_shape_rotation(cnt, shape_name)
 
         # 頂点座標リスト
         vertices = [{"x": int(pt[0][0]), "y": int(pt[0][1])} for pt in approx]
@@ -329,7 +363,7 @@ def recognize_shapes(frame):
             "color": contour_color, #輪郭の色を追加
             "centerX": cx,
             "centerY": cy,
-            "rotation": round(rotation_deg, 2),
+            "rotation": rotation_deg,
             "width": round(rect_w, 2),
             "height": round(rect_h, 2),
             "area": round(area, 2),
@@ -337,7 +371,15 @@ def recognize_shapes(frame):
         }
 
         recognized_shapes.append(shape_info)
+        
+        # ----------------------------------------------------
+        # 8. トラッカー（時系列フィルター）を通す ★修正ポイント★
+        # ----------------------------------------------------
+        # 単発フレームでの角度ブレを防ぐため、最後にトラッカーで平均化して返します
+        smoothed_shapes = _tracker.update(recognized_shapes)
 
+        return smoothed_shapes
+        
     return recognized_shapes
 
 
