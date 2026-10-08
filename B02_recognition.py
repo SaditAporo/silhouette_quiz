@@ -372,15 +372,13 @@ def recognize_shapes(frame):
 
         recognized_shapes.append(shape_info)
         
-        # ----------------------------------------------------
-        # 8. トラッカー（時系列フィルター）を通す ★修正ポイント★
-        # ----------------------------------------------------
-        # 単発フレームでの角度ブレを防ぐため、最後にトラッカーで平均化して返します
-        smoothed_shapes = _tracker.update(recognized_shapes)
+    # ----------------------------------------------------
+    # 8. トラッカー（時系列フィルター）を通す ★修正ポイント★
+    # ----------------------------------------------------
+    # 単発フレームでの角度ブレを防ぐため、最後にトラッカーで平均化して返します
+    smoothed_shapes = _tracker.update(recognized_shapes)
 
-        return smoothed_shapes
-        
-    return recognized_shapes
+    return smoothed_shapes
 
 
 def draw_recognition_result(frame, recognized_shapes):
@@ -395,10 +393,35 @@ def draw_recognition_result(frame, recognized_shapes):
         shape_name = item["shape"]
         rotation = item["rotation"]
         color = item["color"] #jsonから色を取得
-        vertices = np.array([[[pt["x"], pt["y"]]] for pt in item["vertices"]], dtype=np.int32) # 頂点座標をnp.arrayに変換
+        
+        #頂点座標のリストを取り出してOpenCV用形式に変換
+        vertices_list = item.get("vertices", [])
+        vertices = np.array([[[pt["x"], pt["y"]]]for pt in vertices_list], dtype = np.int32)
+        
 
-        # 輪郭を描画
-        cv2.drawContours(output_frame, [vertices], -1, color, 2)
+        # 1.輪郭を描画
+        if len(vertices) > 0:
+            cv2.drawContours(output_frame, [vertices], -1, color, 2)
+    
+        #2.頂点座標の描画(各頂点に赤い丸と(x,y)の座標のテキストを表示)
+        for pt in vertices_list:
+            vx, vy = pt["x"], pt["y"]
+            
+            # 頂点に小さな円を描画
+            cv2.circle(output_frame, (vx, vy), 4, (0, 0, 255), -1)
+            
+            # 頂点の横に座標テキストを表示
+            v_label = f"({vx},{vy})"
+            cv2.putText(
+                output_frame,
+                v_label,
+                (vx + 5, vy - 5),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.4,
+                (0,0,0), # 白色テキスト
+                1,
+                cv2.LINE_AA
+            )
         
         # 中心点
         cv2.circle(output_frame, (cx, cy), 6, (0, 0, 255), -1)
@@ -412,7 +435,8 @@ def draw_recognition_result(frame, recognized_shapes):
             cv2.FONT_HERSHEY_SIMPLEX,
             0.6,
             color, #図形と同じ色でテキストを描画
-            2
+            2,
+            cv2.LINE_AA
         )
 
     return output_frame
