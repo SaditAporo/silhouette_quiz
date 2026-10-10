@@ -361,13 +361,13 @@ def recognize_shapes(frame):
             "id": shape_count,
             "shape": shape_name,
             "color": contour_color, #輪郭の色を追加
-            "vertices": vertices,            "centerX": cx,
+            "vertices": vertices,           
+            "centerX": cx,
             "centerY": cy,
             "rotation": rotation_deg,
             "width": round(rect_w, 2),
             "height": round(rect_h, 2),
-            "area": round(area, 2),
-            "vertices": vertices
+            "area": round(area, 2)
         }
 
         recognized_shapes.append(shape_info)
