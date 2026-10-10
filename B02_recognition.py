@@ -360,8 +360,7 @@ def recognize_shapes(frame):
         shape_info = {
             "id": shape_count,
             "shape": shape_name,
-            "color": contour_color, #輪郭の色を追加
-            "vertices": vertices,           
+            "color": contour_color, #輪郭の色を追加       
             "centerX": cx,
             "centerY": cy,
             "rotation": rotation_deg,
@@ -369,11 +368,15 @@ def recognize_shapes(frame):
             "height": round(rect_h, 2),
             "area": round(area, 2)
         }
-
+        #円以外の時は頂点座標を表示
+        if shape_name != "circle":
+            vertices = [{"x": int(pt[0][0]), "y": int(pt[0][1])} for pt in approx]
+            shape_info["vertices"] = vertices
+            
         recognized_shapes.append(shape_info)
         
     # ----------------------------------------------------
-    # 8. トラッカー（時系列フィルター）を通す ★修正ポイント★
+    # 8. トラッカー（時系列フィルター）を通す
     # ----------------------------------------------------
     # 単発フレームでの角度ブレを防ぐため、最後にトラッカーで平均化して返します
     smoothed_shapes = _tracker.update(recognized_shapes)
