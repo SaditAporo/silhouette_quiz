@@ -9,7 +9,12 @@
       "color": null,
       "centerX": 960,
       "centerY": 540,
-      "rotation": 0
+      "rotation": 0,
+      "vertices": [
+        {"x": 960, "y": 360},
+        {"x": 810, "y": 630},
+        {"x": 1110, "y": 630}
+      ]
     }
   ]
 }
