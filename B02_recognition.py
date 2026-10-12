@@ -4,6 +4,8 @@ from collections import deque
 import cv2
 import numpy as np
 
+#認識する図形の追加はrecognize_shapes(frame)関数内のcolor_definitionsをいじる
+
 def calculate_shape_rotation(cnt, shape_name):
     """図形の輪郭（cnt）と種別（shape_name）から、 水平（0度）からの傾き角度（0〜360度）を算出する"""
     # 最小外接矩形（中心, (幅, 高さ), 傾き角）を取得
@@ -189,9 +191,9 @@ _tracker = ShapeTracker(history_size=5)
 
 def recognize_shapes(frame):
     """
-    カメラ画像から個別図形（三角形・丸・正方形・長方形）を高精度に認識する
+    カメラ画像から色紙（赤：三角形、青：四角形など）をベースに高精度に認識する
     """
-    print("[B02_recognition] recognize_shapes() called")
+    print("[B02_recognition] recognize_shapes() called (Color-based)")
 
     recognized_shapes = []
 
@@ -199,188 +201,127 @@ def recognize_shapes(frame):
         print("[B02_recognition] Warning: frame is None")
         return recognized_shapes
 
-    # ----------------------------------------------------
-    # 1. 前処理（グレースケール -> エッジ強調/ブラー -> 二値化）
-    # ----------------------------------------------------
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    
-    # ノイズ低減のためのガウシアンブラー
-    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-
-    # 大津の二値化
-    _, thresh = cv2.threshold(
-        blurred, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU
-    )
-
-    # 図形同士の軽微な接触を切り離すオープニング処理（収縮→膨張）
-    kernel_sep = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
-    thresh_separated = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel_sep, iterations=1)
-
-    # 輪郭の穴埋め・ブレ防止（クロージング処理）
-    kernel_close = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
-    thresh_cleaned = cv2.morphologyEx(thresh_separated, cv2.MORPH_CLOSE, kernel_close)
-
-    # ----------------------------------------------------
-    # 2. 輪郭抽出（全階層の輪郭を取得して接合部に対応）
-    # ----------------------------------------------------
-    contours, _ = cv2.findContours(
-        thresh_cleaned, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE
-    )
-
+    # 色相(Hue)・彩度(Saturation)・明度(Value)へ変換
+    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    frame_area = frame.shape[0] * frame.shape[1]
     shape_count = 0
 
-    for cnt in contours:
-        # ノイズおよび画面全体の外枠を除外する面積フィルタリング
-        area = cv2.contourArea(cnt)
-        frame_area = frame.shape[0] * frame.shape[1]
-        
-        # 極小ノイズ（1000px未満）または全画面の90%以上を占める枠線は除外
-        if area < 1000 or area > (frame_area * 0.9):
-            continue
+    # ----------------------------------------------------
+    # 定義する色ごとのHSV範囲と対応する形状・色情報のマッピング
+    # ※照明環境に応じて調整が必要な場合はここのしきい値を調整してください
+    # ----------------------------------------------------
+    color_definitions = [
+        {
+            "name": "red_triangle",
+            "shape_hint": "triangle",
+            "color_bgr": (0, 0, 255), # 赤 (Display用)
+            # 赤はHの上下端(0~10 および 170~180)に分かれるためマスクを2つ合算
+            "ranges": [
+                (np.array([0, 100, 100]), np.array([10, 255, 255])),
+                (np.array([170, 100, 100]), np.array([180, 255, 255]))
+            ]
+        },
+        {
+            "name": "blue_square",
+            "shape_hint": "square", # または rectangle
+            "color_bgr": (255, 0, 0), # 青 (Display用)
+            "ranges": [
+                (np.array([100, 100, 100]), np.array([130, 255, 255]))
+            ]
+        },
+        {
+            "name": "green_circle",
+            "shape_hint": "circle",
+            "color_bgr": (0, 255, 0), # 緑 (Display用)
+            "ranges": [
+                (np.array([35, 100, 100]), np.array([85, 255, 255]))
+            ]
+        }
+    ]
 
-        # ------------------------------------------------
-        # 3. 形状の幾何学的特徴量の算出
-        # ------------------------------------------------
-        peri = cv2.arcLength(cnt, True)
-        if peri == 0:
-            continue
-
-        # 円形度 (Circularity)
-        circularity = (4 * math.pi * area) / (peri * peri)
-
-        # 最小外接矩形（回転矩形）の取得
-        rect = cv2.minAreaRect(cnt)
-        (box_cx, box_cy), (rect_w, rect_h), angle = rect
-
-        # --- 【補正1】アスペクト比の計算補正 ---
-        # 検出矩形の長辺と短辺を常に正しく整理する
-        long_side = max(rect_w, rect_h)
-        short_side = min(rect_w, rect_h)
-        
-        if short_side > 0:
-            aspect_ratio = long_side / short_side
-        else:
-            aspect_ratio = 1.0
-
-        # --- 【補正2】回転角度（0〜360度）の正規化・補正 ---
-        # cv2.minAreaRectの角度仕様（OpenCVのバージョンにより仕様差あり）の吸収
-        # 長辺（図形の主軸）の傾きベクトルから角度を算出する
-        box_points = cv2.boxPoints(rect)
-        box_points = np.int32(box_points)
-
-        # 矩形の頂点群から最も長い辺のベクトルを求める
-        max_len = 0
-        main_vector = (1, 0)
-        for i in range(4):
-            pt1 = box_points[i]
-            pt2 = box_points[(i + 1) % 4]
-            dist = math.hypot(pt2[0] - pt1[0], pt2[1] - pt1[1])
-            if dist > max_len:
-                max_len = dist
-                main_vector = (pt2[0] - pt1[0], pt2[1] - pt1[1])
-
-        # ベクトルから 0 ~ 180 度の角度を算出（長辺の向き）
-        calc_angle = math.degrees(math.atan2(main_vector[1], main_vector[0])) % 180.0
-        rotation_deg = round(calc_angle, 2)
-
-        # 頂点数計算（輪郭近似）
-        approx = cv2.approxPolyDP(cnt, 0.03 * peri, True)
-        num_vertices = len(approx)
-
-        # ------------------------------------------------
-        # 4. 厳密な形状判定（三角形・丸・正方形・長方形）
-        # ------------------------------------------------
-        shape_name = "unknown"
-
-        # (A) 丸（circle）判定：円形度が高く、特定の丸状である場合
-        if circularity >= 0.72:
-            shape_name = "circle"
-            contour_color = (0,0,255) #red
-
-        # (B) 三角形（triangle）判定：頂点数が3、または頂点数が4未満で円形度が低い場合
-        elif num_vertices == 3:
-            shape_name = "triangle"
-            contour_color = (0,255,0) #green
-
-        # (C) 四角形（square / rectangle）判定：頂点数 4 付近
-        elif num_vertices == 4 or (3 < num_vertices <= 6 and circularity < 0.70):
-            # 最小外接矩形における幅と高さのアスペクト比
-            if rect_h != 0:
-                aspect_ratio = max(rect_w, rect_h) / min(rect_w, rect_h)
+    for color_def in color_definitions:
+        # 1. 色ごとのマスク作成
+        mask = None
+        for (lower, upper) in color_def["ranges"]:
+            m = cv2.inRange(hsv, lower, upper)
+            if mask is None:
+                mask = m
             else:
-                aspect_ratio = 1.0
+                mask = cv2.bitwise_or(mask, m)
 
-            # 正方形（アスペクト比が 1.0 に近い） vs 長方形
-            if aspect_ratio <= 1.25:
-                shape_name = "square"
-                contour_color = (255, 0, 0) #blue
-            else:
-                shape_name = "rectangle"
-                contour_color = (255,165,0) #orange
+        # ノイズ除去とクロージング処理
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
+        mask_cleaned = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+        mask_cleaned = cv2.morphologyEx(mask_cleaned, cv2.MORPH_CLOSE, kernel)
 
-        # それ以外の頂点数が多い場合は、近似処理を強めて再判定
-        else:
-            approx_coarse = cv2.approxPolyDP(cnt, 0.05 * peri, True)
-            if len(approx_coarse) == 3:
-                shape_name = "triangle"
-                contour_color = (0,255,0) #green
-            elif len(approx_coarse) == 4:
-                shape_name = "square" if rect_w / max(rect_h, 1) <= 1.25 else "rectangle"
-                contour_color = (255, 0, 0) if shape_name == "square" else (255, 165, 0)
-            elif circularity >= 0.65:
-                shape_name = "circle"
-                contour_color = (0,0,255) #red
-            else:
-                # 定義外の多角形は判定スキップ（または除外）
+        # 2. 輪郭抽出
+        contours, _ = cv2.findContours(
+            mask_cleaned, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+        )
+
+        for cnt in contours:
+            area = cv2.contourArea(cnt)
+            if area < 1000 or area > (frame_area * 0.9):
                 continue
 
-        # ------------------------------------------------
-        # 5. 中心座標（X, Y）の計算
-        # ------------------------------------------------
-        M = cv2.moments(cnt)
-        if M["m00"] != 0:
-            cx = int(M["m10"] / M["m00"])
-            cy = int(M["m01"] / M["m00"])
-        else:
-            cx, cy = int(box_cx), int(box_cy)
+            peri = cv2.arcLength(cnt, True)
+            if peri == 0:
+                continue
 
-        # ------------------------------------------------
-        # 6. 回転角度の正規化 (0 ~ 360度)
-        # ------------------------------------------------
-        rotation_deg = calculate_shape_rotation(cnt, shape_name)
+            circularity = (4 * math.pi * area) / (peri * peri)
+            rect = cv2.minAreaRect(cnt)
+            (box_cx, box_cy), (rect_w, rect_h), angle = rect
 
-        # 頂点座標リスト
-        vertices = [{"x": int(pt[0][0]), "y": int(pt[0][1])} for pt in approx]
+            long_side = max(rect_w, rect_h)
+            short_side = min(rect_w, rect_h)
+            aspect_ratio = (long_side / short_side) if short_side > 0 else 1.0
 
-        shape_count += 1
+            approx = cv2.approxPolyDP(cnt, 0.03 * peri, True)
+            num_vertices = len(approx)
 
-        # ------------------------------------------------
-        # 7. JSONデータ構造の生成
-        # ------------------------------------------------
-        shape_info = {
-            "id": shape_count,
-            "shape": shape_name,
-            "color": contour_color, #輪郭の色を追加       
-            "centerX": cx,
-            "centerY": cy,
-            "rotation": rotation_deg,
-            "width": round(rect_w, 2),
-            "height": round(rect_h, 2),
-            "area": round(area, 2)
-        }
-        #円以外の時は頂点座標を表示
-        if shape_name != "circle":
-            vertices = [{"x": int(pt[0][0]), "y": int(pt[0][1])} for pt in approx]
-            shape_info["vertices"] = vertices
-            
-        recognized_shapes.append(shape_info)
-        
-    # ----------------------------------------------------
-    # 8. トラッカー（時系列フィルター）を通す
-    # ----------------------------------------------------
-    # 単発フレームでの角度ブレを防ぐため、最後にトラッカーで平均化して返します
+            # 色の定義に基づいた形状決定の優先
+            if color_def["shape_hint"] == "triangle":
+                shape_name = "triangle"
+                contour_color = color_def["color_bgr"]
+            else:
+                # 四角形グループ（正方形 vs 長方形）
+                if aspect_ratio <= 1.25:
+                    shape_name = "square"
+                else:
+                    shape_name = "rectangle"
+                contour_color = color_def["color_bgr"]
+
+            # 重心計算
+            M = cv2.moments(cnt)
+            if M["m00"] != 0:
+                cx = int(M["m10"] / M["m00"])
+                cy = int(M["m01"] / M["m00"])
+            else:
+                cx, cy = int(box_cx), int(box_cy)
+
+            rotation_deg = calculate_shape_rotation(cnt, shape_name)
+            shape_count += 1
+
+            shape_info = {
+                "id": shape_count,
+                "shape": shape_name,
+                "color": contour_color,
+                "centerX": cx,
+                "centerY": cy,
+                "rotation": rotation_deg,
+                "width": round(rect_w, 2),
+                "height": round(rect_h, 2),
+                "area": round(area, 2)
+            }
+
+            if shape_name != "circle":
+                vertices = [{"x": int(pt[0][0]), "y": int(pt[0][1])} for pt in approx]
+                shape_info["vertices"] = vertices
+
+            recognized_shapes.append(shape_info)
+
+    # 3. トラッカー（時系列平滑化）を通す
     smoothed_shapes = _tracker.update(recognized_shapes)
-
     return smoothed_shapes
 
 
