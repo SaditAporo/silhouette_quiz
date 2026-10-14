@@ -7,26 +7,47 @@
     {
       "shape": "triangle",
       "color": null,
-      "centerX": 150,
-      "centerY": 80,
+      "centerX": 960,
+      "centerY": 353,
       "rotation": 0,
       "vertices": [
-        {"x": 150, "y": 40},
-        {"x": 80, "y": 100},
-        {"x": 220, "y": 100}
+        {
+          "x": 960,
+          "y": 120
+        },
+        {
+          "x": 1348,
+          "y": 470
+        },
+        {
+          "x": 572,
+          "y": 470
+        }
       ]
     },
     {
-      "shape": "rectangle",
+      "shape": "square",
       "color": null,
-      "centerX": 150,
-      "centerY": 150,
+      "centerX": 960,
+      "centerY": 662,
       "rotation": 0,
       "vertices": [
-        {"x": 90, "y": 100},
-        {"x": 90, "y": 200},
-        {"x": 210, "y": 200},
-        {"x": 210, "y": 100}
+        {
+          "x": 762,
+          "y": 470
+        },
+        {
+          "x": 1158,
+          "y": 470
+        },
+        {
+          "x": 1158,
+          "y": 854
+        },
+        {
+          "x": 762,
+          "y": 854
+        }
       ]
     }
   ]
