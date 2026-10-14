@@ -1,7 +1,7 @@
 {
   "id": "p002_triangle001",
   "name": "三角形",
-  "image": "triangle001.png",
+  "image": "./data/problems/shilhouette/triangle001.png",
   "animation": "triangle001.gif",
   "areas": [
     {

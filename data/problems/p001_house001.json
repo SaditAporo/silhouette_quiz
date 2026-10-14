@@ -1,7 +1,7 @@
 {
   "id": "p001_house001",
   "name": "家",
-  "image": "house001.png",
+  "image": "./data/problems/shilhouette/house001.png",
   "animation": "house001.gif",
   "areas": [
     {
