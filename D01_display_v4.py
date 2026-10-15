@@ -672,6 +672,7 @@ def show_incorrect(game):
 
     # フォントの設定
     font_message = jp_font(60)
+    font_sync = jp_font(36)
     font_hint = jp_font(24)
     font_button = jp_font(20)
 
@@ -681,12 +682,25 @@ def show_incorrect(game):
     hint_surface = font_hint.render("もう一度、図形の配置を確認してみましょう。", True, (50, 50, 50))
     button_surface = font_button.render("もう一度やってみる", True, (255, 255, 255))
 
-    # 配置座標の計算（centerのY座標で縦の並びを調整しています）
-    message_rect = message_surface.get_rect(center=(400, 180))
-    hint_rect = hint_surface.get_rect(center=(400, 280))
+    # シンクロ率（C04で計算した値）を取り出す
+    synchronization_rate = None
+    if isinstance(game.feedback, dict):
+        synchronization_rate = game.feedback.get("synchronization_rate")
+
+    if synchronization_rate is not None:
+        sync_text = f"ぴったんこパワー：{synchronization_rate:.1f}%"
+        sync_surface = font_sync.render(sync_text, True, (30, 30, 30))
+        sync_rect = sync_surface.get_rect(center=(400, 225))
+    else:
+        sync_surface = None
+        sync_rect = None
+
+    # 配置座標の計算（上から「ざんねん！」→ぴったんこパワー→ヒント→ボタン）
+    message_rect = message_surface.get_rect(center=(400, 140))
+    hint_rect = hint_surface.get_rect(center=(400, 300))
     
     # 「もう一度やってみる」ボタンの範囲（x, y, width, height）
-    button_rect = pygame.Rect(260, 380, 280, 60)
+    button_rect = pygame.Rect(260, 390, 280, 60)
     button_text_rect = button_surface.get_rect(center=button_rect.center)
 
     clock = pygame.time.Clock()
@@ -724,6 +738,8 @@ def show_incorrect(game):
 
         # 描画
         screen.blit(message_surface, message_rect)
+        if sync_surface is not None:
+            screen.blit(sync_surface, sync_rect)
         screen.blit(hint_surface, hint_rect)
         screen.blit(button_surface, button_text_rect)
 
