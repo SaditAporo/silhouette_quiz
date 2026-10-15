@@ -1,7 +1,13 @@
 import json
 import math
 
-from C02_config import POSITION_TOLERANCE, ROTATION_TOLERANCE, VERTEX_SHAPE_TOLERANCE
+from C02_config import (
+    POSITION_TOLERANCE,
+    ROTATION_TOLERANCE,
+    VERTEX_SHAPE_TOLERANCE,
+    STAR_3_THRESHOLD,
+    STAR_2_THRESHOLD,
+)
 
 
 # ========================================
@@ -106,6 +112,66 @@ def _vertex_shape_diff(expected_vertices, actual_vertices):
     return best / size
 
 
+def _position_score(distance):
+    """
+    中心座標のズレから、位置のシンクロ度（0.0〜1.0）を求める。
+    ズレ0pxなら1.0、位置の許容誤差（POSITION_TOLERANCE）以上ズレていたら0.0。
+    """
+    return max(0.0, 1.0 - distance / POSITION_TOLERANCE)
+
+
+def _shape_score(shape_diff):
+    """
+    頂点ズレ率から、向き・形のシンクロ度（0.0〜1.0）を求める。
+    ズレ率0なら1.0。
+    """
+    return max(0.0, 1.0 - shape_diff)
+
+
+def _synchronization_rate(piece_scores, is_correct=False):
+    """
+    ピースごとのシンクロ度（0.0〜1.0）のリストから、全体のシンクロ率（0〜100%）を求める。
+
+    ・正解（is_correct=True）の場合：
+      70%を保証し、配置の精度に応じて 70.0%〜100.0% の範囲で計算する。
+      （基本点70% ＋ 精度ボーナス最大30%）
+    ・不正解の場合：
+      正解の最低保証（70%）を超えないよう、精度に応じて 0.0%〜70.0% 未満の範囲とする。
+    ・お題にピースが1つも無い場合は None を返す
+    """
+    if not piece_scores:
+        return None
+
+    accuracy = sum(piece_scores) / len(piece_scores)
+    accuracy = max(0.0, min(1.0, accuracy))
+
+    if is_correct:
+        rate = 70.0 + (accuracy * 30.0)
+    else:
+        rate = accuracy * 70.0
+
+    return max(0.0, min(100.0, rate))
+
+
+def _star_count(synchronization_rate, is_correct):
+    """
+    シンクロ率から、正解画面に表示する星の数（0〜3）を求める。
+
+    ・不正解なら星0
+    ・STAR_3_THRESHOLD 以上なら星3、STAR_2_THRESHOLD 以上なら星2、それ未満は星1
+    ・シンクロ率が求められない正解（お題にピースが無いなど）は星1
+    """
+    if not is_correct:
+        return 0
+    if synchronization_rate is None:
+        return 1
+    if synchronization_rate >= STAR_3_THRESHOLD:
+        return 3
+    if synchronization_rate >= STAR_2_THRESHOLD:
+        return 2
+    return 1
+
+
 def check_answer(problem, recognized_shapes):
     """
     認識結果が問題の正解と一致しているか判定する
@@ -132,6 +198,7 @@ def check_answer(problem, recognized_shapes):
 
     missing = []  # お題にあるが、対応する図形が見つからなかったもの
     wrong = []    # 図形の種類は見つかったが、位置・角度がズレていたもの
+    piece_scores = []  # シンクロ率の計算に使う、ピースごとのシンクロ度（0.0〜1.0）
 
     for area in areas:
         shape_name = area.get("shape")
@@ -145,6 +212,7 @@ def check_answer(problem, recognized_shapes):
         if not candidates:
             # 対応する種類の図形が1つも見つからない -> 不足
             missing.append(area)
+            piece_scores.append(0.0)  # 見つからないピースはシンクロ度0
             continue
 
         # 中心座標が最も近い候補を選ぶ
@@ -154,11 +222,13 @@ def check_answer(problem, recognized_shapes):
         remaining_shapes.remove(best)
 
         distance = _distance(area, best)
+        position_score = _position_score(distance)
 
         if shape_name == "circle":
             # 円：中心座標のみで判定
             method = "中心"
             is_ok = distance <= POSITION_TOLERANCE
+            piece_score = position_score
             detail = f"距離={distance:.1f}px"
         else:
             distance_ok = distance <= POSITION_TOLERANCE
@@ -172,6 +242,8 @@ def check_answer(problem, recognized_shapes):
                 method = "中心+頂点"
                 shape_ok = shape_diff <= VERTEX_SHAPE_TOLERANCE
                 is_ok = distance_ok and shape_ok
+                # 位置と向き・形のシンクロ度を半分ずつ反映
+                piece_score = (position_score + _shape_score(shape_diff)) / 2
                 detail = (
                     f"距離OK={distance_ok}, 向きOK={shape_ok}, "
                     f"距離={distance:.1f}px, 頂点ズレ率={shape_diff:.2f}"
@@ -185,10 +257,15 @@ def check_answer(problem, recognized_shapes):
                     best.get("rotation", 0)
                 )
                 is_ok = distance_ok and rotation_ok
+                # 頂点で比較できないので、位置のシンクロ度だけを使う
+                piece_score = position_score
                 detail = (
                     f"距離OK={distance_ok}, 角度OK={rotation_ok}, "
                     f"距離={distance:.1f}px"
                 )
+
+        piece_scores.append(piece_score)
+        detail += f", シンクロ度={piece_score * 100:.1f}%"
 
         if is_ok:
             print(f"[C04_answer_checker] OK: {shape_name} [{method}] ({detail})")
@@ -198,13 +275,21 @@ def check_answer(problem, recognized_shapes):
 
     result = (len(missing) == 0 and len(wrong) == 0)
 
+    synchronization_rate = _synchronization_rate(piece_scores, is_correct=result)
+    stars = _star_count(synchronization_rate, result)
+
     feedback = {
         "missing": missing,
         "wrong": wrong,
+        "synchronization_rate": synchronization_rate,
+        "stars": stars,
     }
 
     print(f"[C04_answer_checker] 判定結果: {result}")
     print(f"[C04_answer_checker] missing: {len(missing)}件, wrong: {len(wrong)}件")
+    if synchronization_rate is not None:
+        print(f"[C04_answer_checker] シンクロ率: {synchronization_rate:.1f}%")
+    print(f"[C04_answer_checker] 星: {stars}つ")
 
     return result, feedback
 
