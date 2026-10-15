@@ -6,6 +6,12 @@ import numpy as np
 
 #認識する図形の追加はrecognize_shapes(frame)関数内のcolor_definitionsをいじる
 
+def hsv_to_bgr(h, s, v):
+    """HSVのdictまたは値から、OpenCV描画用のBGRタプルに変換する"""
+    hsv_np = np.uint8([[[h, s, v]]])
+    bgr_np = cv2.cvtColor(hsv_np, cv2.COLOR_HSV2BGR)
+    return tuple(int(c) for c in bgr_np[0][0])
+
 def calculate_shape_rotation(cnt, shape_name):
     """図形の輪郭（cnt）と種別（shape_name）から、 水平（0度）からの傾き角度（0〜360度）を算出する"""
     # 最小外接矩形（中心, (幅, 高さ), 傾き角）を取得
@@ -210,31 +216,34 @@ def recognize_shapes(frame):
     # 定義する色ごとのHSV範囲と対応する形状・色情報のマッピング
     # ※照明環境に応じて調整が必要な場合はここのしきい値を調整してください
     # ----------------------------------------------------
+
     color_definitions = [
         {
             "name": "red_triangle",
             "shape_hint": "triangle",
-            "color_bgr": (0, 0, 255), # 赤 (Display用)
-            # 赤はHの上下端(0~10 および 170~180)に分かれるためマスクを2つ合算
+            "color_hsv": {"h": 0, "s": 255, "v": 255}, # 表示用（タプル化して使用してください）
+            # 赤はHの端 (0〜10 と 170〜180) に分かれるため2つの範囲を設定
             "ranges": [
-                (np.array([0, 100, 100]), np.array([10, 255, 255])),
-                (np.array([170, 100, 100]), np.array([180, 255, 255]))
+                (np.array([0, 70, 70], dtype=np.uint8), np.array([10, 255, 255], dtype=np.uint8)),
+                (np.array([170, 70, 70], dtype=np.uint8), np.array([180, 255, 255], dtype=np.uint8))
             ]
         },
         {
             "name": "blue_square",
-            "shape_hint": "square", # または rectangle
-            "color_bgr": (255, 0, 0), # 青 (Display用)
+            "shape_hint": "square",
+            "color_hsv": {"h": 120, "s": 255, "v": 255},
+            # 青はおおむね 100〜130
             "ranges": [
-                (np.array([100, 100, 100]), np.array([130, 255, 255]))
+                (np.array([100, 70, 70], dtype=np.uint8), np.array([130, 255, 255], dtype=np.uint8))
             ]
         },
         {
             "name": "green_circle",
             "shape_hint": "circle",
-            "color_bgr": (0, 255, 0), # 緑 (Display用)
+            "color_hsv": {"h": 60, "s": 255, "v": 255},
+            # 緑はおおむね 35〜85
             "ranges": [
-                (np.array([35, 100, 100]), np.array([85, 255, 255]))
+                (np.array([35, 70, 70], dtype=np.uint8), np.array([85, 255, 255], dtype=np.uint8))
             ]
         }
     ]
@@ -278,18 +287,28 @@ def recognize_shapes(frame):
 
             approx = cv2.approxPolyDP(cnt, 0.03 * peri, True)
             num_vertices = len(approx)
+            
+            #色の定義に基づいた形状決定の優先
+            hsv_val = color_def["color_hsv"]
+            #ここでHSV設定から描画用のBGRカラーを自動生成する
+            contour_color = hsv_to_bgr(hsv_val["h"], hsv_val["s"], hsv_val["v"])
 
-            # 色の定義に基づいた形状決定の優先
-            if color_def["shape_hint"] == "triangle":
+            #color_defのshape_hintに基づいて正確に形状を決定する
+            hint = color_def["shape_hint"]
+            if hint == "triangle":
+                #赤色などの三角形として定義されるもの
                 shape_name = "triangle"
-                contour_color = color_def["color_bgr"]
+            elif hint == "circle":
+                #緑色などの円形として定義されるもの
+                shape_name = "circle"
             else:
                 # 四角形グループ（正方形 vs 長方形）
                 if aspect_ratio <= 1.25:
                     shape_name = "square"
                 else:
                     shape_name = "rectangle"
-                contour_color = color_def["color_bgr"]
+                    
+            contour_color = hsv_to_bgr(color_def["color_hsv"]["h"], color_def["color_hsv"]["s"], color_def["color_hsv"]["v"])
 
             # 重心計算
             M = cv2.moments(cnt)
