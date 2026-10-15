@@ -238,12 +238,21 @@ def recognize_shapes(frame):
             ]
         },
         {
-              "name": "purple_rectangle",
+            "name": "purple_rectangle",
             "shape_hint": "rectangle",
             "color_hsv": {"h": 145, "s": 255, "v": 255},
             # 紫・マゼンタ系はおおむね 130〜160 あたり
             "ranges": [
                 (np.array([130, 50, 50], dtype=np.uint8), np.array([165, 255, 255], dtype=np.uint8))
+            ]
+        },
+        {
+            "name": "light_blue_parallelogram",
+            "shape_hint": "parallelogram",
+            "color_hsv": {"h": 90, "s": 255, "v": 255},
+            # 水色・シアン系はおおむね 80〜100 あたり
+            "ranges": [
+                (np.array([80, 70, 70], dtype=np.uint8), np.array([100, 255, 255], dtype=np.uint8))
             ]
         },
         {
@@ -322,6 +331,14 @@ def recognize_shapes(frame):
             elif hint == "semicircle":
                 #黄色などの半円形(円形度が完全な円(約0.785)よりやや低く、かつ三角形とも異なる)として定義されるもの
                 shape_name = "semicircle"
+            elif hint == "parallelogram":
+                # 水色の平行四辺形
+                shape_name = "parallelogram"
+            elif hint == "rectangle":
+                if aspect_ratio <= 1.25:
+                    shape_name = "square"
+                else:
+                    shape_name = "rectangle"
             else:
                 # 四角形グループ（正方形 vs 長方形）
                 if aspect_ratio <= 1.25:
