@@ -238,6 +238,15 @@ def recognize_shapes(frame):
             ]
         },
         {
+              "name": "purple_rectangle",
+            "shape_hint": "rectangle",
+            "color_hsv": {"h": 145, "s": 255, "v": 255},
+            # 紫・マゼンタ系はおおむね 130〜160 あたり
+            "ranges": [
+                (np.array([130, 50, 50], dtype=np.uint8), np.array([165, 255, 255], dtype=np.uint8))
+            ]
+        },
+        {
             "name": "green_circle",
             "shape_hint": "circle",
             "color_hsv": {"h": 60, "s": 255, "v": 255},
@@ -245,6 +254,15 @@ def recognize_shapes(frame):
             "ranges": [
                 (np.array([35, 70, 70], dtype=np.uint8), np.array([85, 255, 255], dtype=np.uint8))
             ]
+        },
+        {
+            "name": "yellow_semicircle",
+            "shape_hint": "semicircle",
+            "color_hsv": {"h": 30, "s": 255, "v": 255},
+            # 黄色はおおむね 20〜35
+            "ranges": [
+                (np.array([20, 70, 70], dtype=np.uint8), np .array([35, 255, 255], dtype=np.uint8))   
+            ]  
         }
     ]
 
@@ -301,6 +319,9 @@ def recognize_shapes(frame):
             elif hint == "circle":
                 #緑色などの円形として定義されるもの
                 shape_name = "circle"
+            elif hint == "semicircle":
+                #黄色などの半円形(円形度が完全な円(約0.785)よりやや低く、かつ三角形とも異なる)として定義されるもの
+                shape_name = "semicircle"
             else:
                 # 四角形グループ（正方形 vs 長方形）
                 if aspect_ratio <= 1.25:
