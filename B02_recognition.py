@@ -272,6 +272,16 @@ def recognize_shapes(frame):
             "ranges": [
                 (np.array([20, 70, 70], dtype=np.uint8), np .array([35, 255, 255], dtype=np.uint8))   
             ]  
+        },
+        {
+            "name": "black_ellipse",
+            "shape_hint": "ellipse",
+            "color_hsv": {"h": 0, "s": 0, "v": 50},  # 描画・表示用の色（黒や濃いグレーなど）
+            "ranges": [
+                # 黒色は「明度が低く、彩度も低い」エリアを指定します
+                # ※照明環境に合わせてVの上限（例: 50〜70）を調整してください
+                (np.array([0, 0, 0], dtype=np.uint8), np.array([180, 255, 50], dtype=np.uint8))
+            ]
         }
     ]
 
@@ -331,6 +341,12 @@ def recognize_shapes(frame):
             elif hint == "semicircle":
                 #黄色などの半円形(円形度が完全な円(約0.785)よりやや低く、かつ三角形とも異なる)として定義されるもの
                 shape_name = "semicircle"
+            elif hint == "ellipse":
+                # 楕円として定義するもの（円形度やアスペクト比で判定、またはそのままellipseとする）
+                if aspect_ratio <= 1.2:
+                    shape_name = "circle"  # ほぼ円の場合
+                else:
+                    shape_name = "ellipse" # 伸びた楕円の場合
             elif hint == "parallelogram":
                 # 水色の平行四辺形
                 shape_name = "parallelogram"
