@@ -574,6 +574,7 @@ def show_correct(game):
 
     # 画面サイズとタイトルの設定（800x600）
     screen = pygame.display.set_mode((800, 600))
+    os.environ['SDL_VIDEO_CENTERED'] = '1'
     pygame.display.set_caption("シルエットパズル")
 
     # フォントの設定
@@ -679,6 +680,7 @@ def show_incorrect(game):
 
     # 画面サイズとタイトルの設定（800x600）
     screen = pygame.display.set_mode((800, 600))
+    os.environ['SDL_VIDEO_CENTERED'] = '1'
     pygame.display.set_caption("シルエットパズル")
 
     # フォントの設定
