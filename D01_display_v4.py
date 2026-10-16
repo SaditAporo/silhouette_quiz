@@ -145,6 +145,7 @@ def show_opening(game):
 
     # 画面サイズとタイトルの設定（tkinter版の800x600に合わせる）
     screen = pygame.display.set_mode((800, 600))
+    os.environ['SDL_VIDEO_CENTERED'] = '1'
     pygame.display.set_caption("シルエットパズル")
 
     # フォントの設定（日本語を表示するためにシステムフォントを使用）
@@ -239,6 +240,7 @@ def show_select(game):
 
     # 画面サイズとタイトルの設定（800x600）
     screen = pygame.display.set_mode((800, 600))
+    os.environ['SDL_VIDEO_CENTERED'] = '1'
     pygame.display.set_caption("シルエットパズル")
 
     # フォントの設定（環境に合わせて適宜変更してください）
@@ -340,6 +342,7 @@ def show_quiz(game):
 
     # 画面サイズとタイトルの設定（1400x800）
     screen = pygame.display.set_mode((1400, 800))
+    os.environ['SDL_VIDEO_CENTERED'] = '1'
     pygame.display.set_caption("シルエットパズル")
 
     # ----------------------------------------
