@@ -5,6 +5,7 @@ import C05_sound
 import cv2
 from PIL import Image, ImageTk
 import os
+import math
 import pygame
 from B02_recognition import recognize_shapes, draw_recognition_result
 
@@ -525,6 +526,44 @@ def show_quiz(game):
         display(game)
 
 
+# 星の色（獲得した星＝金色、獲得していない星＝薄いグレー）
+STAR_COLOR_ON = (255, 200, 40)
+STAR_COLOR_OFF = (210, 210, 210)
+STAR_COLOR_BORDER = (190, 130, 0)
+MAX_STARS = 3
+
+
+def _star_points(center, outer_radius, inner_ratio=0.45):
+    """5つの角を持つ星形の頂点座標（10点）を求める"""
+    cx, cy = center
+    inner_radius = outer_radius * inner_ratio
+    points = []
+    for i in range(10):
+        # 上向きの角から始めて、36度ずつ外側・内側を交互に取る
+        angle = math.radians(-90 + i * 36)
+        radius = outer_radius if i % 2 == 0 else inner_radius
+        points.append((cx + radius * math.cos(angle), cy + radius * math.sin(angle)))
+    return points
+
+
+def draw_stars(screen, stars, center_y, outer_radius=32, spacing=90):
+    """
+    星を MAX_STARS 個分、画面の中央に横並びで描く。
+    左から stars 個を金色、残りをグレーで描く。
+    ※「★」の文字はフォントによっては表示できないため、多角形で描く。
+    """
+    screen_center_x = screen.get_width() // 2
+    start_x = screen_center_x - spacing * (MAX_STARS - 1) / 2
+
+    for i in range(MAX_STARS):
+        center = (start_x + i * spacing, center_y)
+        points = _star_points(center, outer_radius)
+        color = STAR_COLOR_ON if i < stars else STAR_COLOR_OFF
+        pygame.draw.polygon(screen, color, points)
+        if i < stars:
+            pygame.draw.polygon(screen, STAR_COLOR_BORDER, points, 3)
+
+
 def show_correct(game):
     """正解フィードバック画面を表示する（pygame版）"""
     print("[D01_display] show_correct() called (pygame)")
@@ -539,15 +578,39 @@ def show_correct(game):
 
     # フォントの設定
     font_message = jp_font(60)
+    font_sync = jp_font(36)
     font_button = jp_font(24)
 
+    # シンクロ率と星の数（C04で計算した値）を取り出す
+    synchronization_rate = None
+    stars = 1
+    if isinstance(game.feedback, dict):
+        synchronization_rate = game.feedback.get("synchronization_rate")
+        stars = game.feedback.get("stars", 1)
+
+    # 星の数に応じたメッセージ
+    CORRECT_MESSAGES = {
+        1: "せいかい！",
+        2: "じょうず！！",
+        3: "かんぺき！！！",
+    }
+    message_text = CORRECT_MESSAGES.get(stars, "せいかい！")
+
     # テキストオブジェクトの作成
-    # 「せいかい！」は目立つように赤色（255, 0, 0）にしています
-    message_surface = font_message.render("せいかい！", True, (255, 0, 0))
+    message_surface = font_message.render(message_text, True, (255, 0, 0))
     button_surface = font_button.render("パズル選択へ", True, (255, 255, 255))
 
-    # 配置座標の計算
-    message_rect = message_surface.get_rect(center=(400, 200))
+    if synchronization_rate is not None:
+        sync_text = f"ぴったんこパワー：{synchronization_rate:.1f}%"
+        sync_surface = font_sync.render(sync_text, True, (30, 30, 30))
+        sync_rect = sync_surface.get_rect(center=(400, 315))
+    else:
+        sync_surface = None
+        sync_rect = None
+
+    # 配置座標の計算（上からメッセージ→星→ぴったんこパワー→ボタン）
+    message_rect = message_surface.get_rect(center=(400, 140))
+    stars_center_y = 235
     
     # 「パズル選択へ」ボタンの範囲（x, y, width, height）
     button_rect = pygame.Rect(280, 380, 240, 60)
@@ -589,6 +652,9 @@ def show_correct(game):
 
         # 描画
         screen.blit(message_surface, message_rect)
+        draw_stars(screen, stars, stars_center_y)
+        if sync_surface is not None:
+            screen.blit(sync_surface, sync_rect)
         screen.blit(button_surface, button_text_rect)
 
         pygame.display.flip()
@@ -617,6 +683,7 @@ def show_incorrect(game):
 
     # フォントの設定
     font_message = jp_font(60)
+    font_sync = jp_font(36)
     font_hint = jp_font(24)
     font_button = jp_font(20)
 
@@ -626,12 +693,25 @@ def show_incorrect(game):
     hint_surface = font_hint.render("もう一度、図形の配置を確認してみましょう。", True, (50, 50, 50))
     button_surface = font_button.render("もう一度やってみる", True, (255, 255, 255))
 
-    # 配置座標の計算（centerのY座標で縦の並びを調整しています）
-    message_rect = message_surface.get_rect(center=(400, 180))
-    hint_rect = hint_surface.get_rect(center=(400, 280))
+    # シンクロ率（C04で計算した値）を取り出す
+    synchronization_rate = None
+    if isinstance(game.feedback, dict):
+        synchronization_rate = game.feedback.get("synchronization_rate")
+
+    if synchronization_rate is not None:
+        sync_text = f"ぴったんこパワー：{synchronization_rate:.1f}%"
+        sync_surface = font_sync.render(sync_text, True, (30, 30, 30))
+        sync_rect = sync_surface.get_rect(center=(400, 225))
+    else:
+        sync_surface = None
+        sync_rect = None
+
+    # 配置座標の計算（上から「ざんねん！」→ぴったんこパワー→ヒント→ボタン）
+    message_rect = message_surface.get_rect(center=(400, 140))
+    hint_rect = hint_surface.get_rect(center=(400, 300))
     
     # 「もう一度やってみる」ボタンの範囲（x, y, width, height）
-    button_rect = pygame.Rect(260, 380, 280, 60)
+    button_rect = pygame.Rect(260, 390, 280, 60)
     button_text_rect = button_surface.get_rect(center=button_rect.center)
 
     clock = pygame.time.Clock()
@@ -669,6 +749,8 @@ def show_incorrect(game):
 
         # 描画
         screen.blit(message_surface, message_rect)
+        if sync_surface is not None:
+            screen.blit(sync_surface, sync_rect)
         screen.blit(hint_surface, hint_rect)
         screen.blit(button_surface, button_text_rect)
 
