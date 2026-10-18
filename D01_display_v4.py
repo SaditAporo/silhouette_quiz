@@ -255,15 +255,22 @@ def show_select(game):
     title_surface = font_title.render("パズルを選んでください", True, (0, 0, 0))
     title_rect = title_surface.get_rect(center=(400, 100))
 
-    # PROBLEM_LISTから、問題の数だけボタンを縦に並べて作る（画面内に綺麗に収まるよう自動調整）
+    # PROBLEM_LISTから、問題の数だけボタンを3列のグリッド状に並べて作る
+    # 左上から右へ並べ、3つ並んだら次の行へ折り返す
     buttons = []
-    n_problems = len(PROBLEM_LIST)
-    btn_w, btn_h = 160, 48
-    spacing = min(75, int(420 / max(1, n_problems)))
-    start_y = 170 + max(0, (400 - n_problems * spacing) // 2)
+    columns = 3                 # 列数
+    btn_w, btn_h = 200, 50      # ボタンの大きさ
+    gap_x, gap_y = 40, 30       # ボタン同士の横・縦の間隔
+    grid_w = columns * btn_w + (columns - 1) * gap_x
+    start_x = (800 - grid_w) // 2   # グリッド全体を画面の左右中央に寄せる
+    start_y = 180
 
     for i, (label, filename) in enumerate(PROBLEM_LIST):
-        rect = pygame.Rect(320, start_y + i * spacing, btn_w, btn_h)
+        col = i % columns
+        row = i // columns
+        x = start_x + col * (btn_w + gap_x)
+        y = start_y + row * (btn_h + gap_y)
+        rect = pygame.Rect(x, y, btn_w, btn_h)
         text_surface = font_button.render(label, True, (255, 255, 255))
         text_rect = text_surface.get_rect(center=rect.center)
         buttons.append((rect, text_surface, text_rect, label, filename))
