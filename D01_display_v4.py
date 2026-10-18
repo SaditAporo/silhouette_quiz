@@ -230,6 +230,7 @@ PROBLEM_LIST = [
     ("三角形", "p002_triangle001.json"),
     ("バス", "p003_bus001.json"),
     ("ちょうちょ", "p004_butterfly001.json"),
+    ("月", "p005_moon001.json"),
 ]
 
 
@@ -252,12 +253,17 @@ def show_select(game):
     
     # テキストオブジェクトの作成
     title_surface = font_title.render("パズルを選んでください", True, (0, 0, 0))
-    title_rect = title_surface.get_rect(center=(400, 120))
+    title_rect = title_surface.get_rect(center=(400, 100))
 
-    # PROBLEM_LISTから、問題の数だけボタンを縦に並べて作る
+    # PROBLEM_LISTから、問題の数だけボタンを縦に並べて作る（画面内に綺麗に収まるよう自動調整）
     buttons = []
+    n_problems = len(PROBLEM_LIST)
+    btn_w, btn_h = 160, 48
+    spacing = min(75, int(420 / max(1, n_problems)))
+    start_y = 170 + max(0, (400 - n_problems * spacing) // 2)
+
     for i, (label, filename) in enumerate(PROBLEM_LIST):
-        rect = pygame.Rect(320, 240 + i * 80, 160, 50)
+        rect = pygame.Rect(320, start_y + i * spacing, btn_w, btn_h)
         text_surface = font_button.render(label, True, (255, 255, 255))
         text_rect = text_surface.get_rect(center=rect.center)
         buttons.append((rect, text_surface, text_rect, label, filename))
