@@ -1,0 +1,96 @@
+{
+  "id": "p010_rocket001",
+  "name": "ロケット",
+  "image": "./data/problems/shilhouette/rocket001.png",
+  "animation": "rocket001.gif",
+  "areas": [
+    {
+      "shape": "rectangle",
+      "color": null,
+      "centerX": 960,
+      "centerY": 620,
+      "rotation": 90,
+      "vertices": [
+        {
+          "x": 780,
+          "y": 280
+        },
+        {
+          "x": 1140,
+          "y": 280
+        },
+        {
+          "x": 1140,
+          "y": 960
+        },
+        {
+          "x": 780,
+          "y": 960
+        }
+      ]
+    },
+    {
+      "shape": "triangle",
+      "color": null,
+      "centerX": 960,
+      "centerY": 213,
+      "rotation": 0,
+      "vertices": [
+        {
+          "x": 960,
+          "y": 80
+        },
+        {
+          "x": 1140,
+          "y": 280
+        },
+        {
+          "x": 780,
+          "y": 280
+        }
+      ]
+    },
+    {
+      "shape": "triangle",
+      "color": null,
+      "centerX": 673,
+      "centerY": 793,
+      "rotation": 180,
+      "vertices": [
+        {
+          "x": 780,
+          "y": 580
+        },
+        {
+          "x": 780,
+          "y": 900
+        },
+        {
+          "x": 460,
+          "y": 900
+        }
+      ]
+    },
+    {
+      "shape": "triangle",
+      "color": null,
+      "centerX": 1247,
+      "centerY": 793,
+      "rotation": 180,
+      "vertices": [
+        {
+          "x": 1140,
+          "y": 580
+        },
+        {
+          "x": 1140,
+          "y": 900
+        },
+        {
+          "x": 1460,
+          "y": 900
+        }
+      ]
+    }
+  ]
+}
