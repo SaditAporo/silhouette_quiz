@@ -1,0 +1,54 @@
+{
+  "id": "p006_fish001",
+  "name": "さかな",
+  "image": "./data/problems/shilhouette/fish001.png",
+  "animation": "fish001.gif",
+  "areas": [
+    {
+      "shape": "rectangle",
+      "color": null,
+      "centerX": 660,
+      "centerY": 540,
+      "rotation": 0,
+      "vertices": [
+        {
+          "x": 300,
+          "y": 420
+        },
+        {
+          "x": 1020,
+          "y": 420
+        },
+        {
+          "x": 1020,
+          "y": 660
+        },
+        {
+          "x": 300,
+          "y": 660
+        }
+      ]
+    },
+    {
+      "shape": "triangle",
+      "color": null,
+      "centerX": 1273,
+      "centerY": 540,
+      "rotation": 90,
+      "vertices": [
+        {
+          "x": 1020,
+          "y": 540
+        },
+        {
+          "x": 1400,
+          "y": 160
+        },
+        {
+          "x": 1400,
+          "y": 920
+        }
+      ]
+    }
+  ]
+}

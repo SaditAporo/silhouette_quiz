@@ -231,6 +231,7 @@ PROBLEM_LIST = [
     ("バス", "p003_bus001.json"),
     ("ちょうちょ", "p004_butterfly001.json"),
     ("月", "p005_moon001.json"),
+    ("さかな", "p006_fish001.json"),
 ]
 
 
