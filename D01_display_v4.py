@@ -229,6 +229,15 @@ PROBLEM_LIST = [
     ("家", "p001_house001.json"),
     ("三角形", "p002_triangle001.json"),
     ("バス", "p003_bus001.json"),
+    ("ちょうちょ", "p004_butterfly001.json"),
+    ("月", "p005_moon001.json"),
+    ("さかな", "p006_fish001.json"),
+    ("キノコ", "p007_mushroom001.json"),
+    ("ヨット", "p008_yacht001.json"),
+    ("雪だるま", "p009_snowman001.json"),
+    ("ロケット", "p010_rocket001.json"),
+    ("おでん", "p011_oden001.json"),
+    ("ちょうちょ(ムズ)", "p012_butterfly_002.json"),
 ]
 
 
@@ -251,12 +260,24 @@ def show_select(game):
     
     # テキストオブジェクトの作成
     title_surface = font_title.render("パズルを選んでください", True, (0, 0, 0))
-    title_rect = title_surface.get_rect(center=(400, 120))
+    title_rect = title_surface.get_rect(center=(400, 100))
 
-    # PROBLEM_LISTから、問題の数だけボタンを縦に並べて作る
+    # PROBLEM_LISTから、問題の数だけボタンを3列のグリッド状に並べて作る
+    # 左上から右へ並べ、3つ並んだら次の行へ折り返す
     buttons = []
+    columns = 3                 # 列数
+    btn_w, btn_h = 200, 50      # ボタンの大きさ
+    gap_x, gap_y = 40, 30       # ボタン同士の横・縦の間隔
+    grid_w = columns * btn_w + (columns - 1) * gap_x
+    start_x = (800 - grid_w) // 2   # グリッド全体を画面の左右中央に寄せる
+    start_y = 180
+
     for i, (label, filename) in enumerate(PROBLEM_LIST):
-        rect = pygame.Rect(320, 240 + i * 80, 160, 50)
+        col = i % columns
+        row = i // columns
+        x = start_x + col * (btn_w + gap_x)
+        y = start_y + row * (btn_h + gap_y)
+        rect = pygame.Rect(x, y, btn_w, btn_h)
         text_surface = font_button.render(label, True, (255, 255, 255))
         text_rect = text_surface.get_rect(center=rect.center)
         buttons.append((rect, text_surface, text_rect, label, filename))

@@ -1,0 +1,100 @@
+{
+  "id": "p012_butterfly_002",
+  "name": "ちょうちょ(ムズ)",
+  "image": "./data/problems/shilhouette/butterfly002.png",
+  "animation": "butterfly002.gif",
+  "areas": [
+    {
+      "shape": "parallelogram",
+      "color": null,
+      "centerX": 700,
+      "centerY": 380,
+      "rotation": 333,
+      "vertices": [
+        {
+          "x": 960,
+          "y": 570
+        },
+        {
+          "x": 790,
+          "y": 240
+        },
+        {
+          "x": 440,
+          "y": 190
+        },
+        {
+          "x": 610,
+          "y": 520
+        }
+      ]
+    },
+    {
+      "shape": "parallelogram",
+      "color": null,
+      "centerX": 1220,
+      "centerY": 380,
+      "rotation": 297,
+      "vertices": [
+        {
+          "x": 960,
+          "y": 570
+        },
+        {
+          "x": 1130,
+          "y": 240
+        },
+        {
+          "x": 1480,
+          "y": 190
+        },
+        {
+          "x": 1310,
+          "y": 520
+        }
+      ]
+    },
+    {
+      "shape": "triangle",
+      "color": null,
+      "centerX": 783,
+      "centerY": 757,
+      "rotation": 340,
+      "vertices": [
+        {
+          "x": 960,
+          "y": 570
+        },
+        {
+          "x": 580,
+          "y": 710
+        },
+        {
+          "x": 810,
+          "y": 990
+        }
+      ]
+    },
+    {
+      "shape": "triangle",
+      "color": null,
+      "centerX": 1137,
+      "centerY": 757,
+      "rotation": 219,
+      "vertices": [
+        {
+          "x": 960,
+          "y": 570
+        },
+        {
+          "x": 1340,
+          "y": 710
+        },
+        {
+          "x": 1110,
+          "y": 990
+        }
+      ]
+    }
+  ]
+}

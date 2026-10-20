@@ -1,0 +1,50 @@
+{
+  "id": "p004_butterfly001",
+  "name": "ちょうちょ",
+  "image": "./data/problems/shilhouette/butterfly001.png",
+  "animation": "butterfly001.gif",
+  "areas": [
+    {
+      "shape": "triangle",
+      "color": null,
+      "centerX": 693,
+      "centerY": 540,
+      "rotation": 90,
+      "vertices": [
+        {
+          "x": 960,
+          "y": 540
+        },
+        {
+          "x": 560,
+          "y": 140
+        },
+        {
+          "x": 560,
+          "y": 940
+        }
+      ]
+    },
+    {
+      "shape": "triangle",
+      "color": null,
+      "centerX": 1227,
+      "centerY": 540,
+      "rotation": 90,
+      "vertices": [
+        {
+          "x": 960,
+          "y": 540
+        },
+        {
+          "x": 1360,
+          "y": 140
+        },
+        {
+          "x": 1360,
+          "y": 940
+        }
+      ]
+    }
+  ]
+}
