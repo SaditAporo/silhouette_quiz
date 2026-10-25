@@ -25,6 +25,9 @@ FONT_DIR = BASE_DIR / "assets" / "fonts"
 # サウンドデータ
 SOUND_DIR = BASE_DIR / "assets" / "sounds"
 
+# カットイン演出データ（問題ごとの背景画像やアニメーショングラフィック）
+CUTIN_DIR = BASE_DIR / "assets" / "cutin"
+
 
 # ウィンドウ設定
 WINDOW_TITLE = "シルエットパズル"

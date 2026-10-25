@@ -1,4 +1,3 @@
-#import tkinter as tk
 from A01_problem_data import load_problem
 import C02_config
 import C05_sound
@@ -91,6 +90,7 @@ from C03_game import (
     SCREEN_QUIZ,
     SCREEN_CORRECT,
     SCREEN_INCORRECT,
+    SCREEN_PERFECT,
 )
 
 from B01_camera_v1 import (
@@ -692,6 +692,152 @@ def show_correct(game):
     display(game)
 
 
+def show_cutin(game):
+    """星3（95%以上）正解時のカットイン演出画面（数秒後に自動でいつもの正解画面へ遷移）"""
+    print("[D01_display] show_cutin() called (pygame)")
+    pygame.font.init()
+
+    # 画面サイズとタイトルの設定（1400x800）
+    screen = pygame.display.set_mode((1400, 800))
+    os.environ['SDL_VIDEO_CENTERED'] = '1'
+    pygame.display.set_caption("シルエットパズル - かんぺき！")
+
+    font_title = jp_font(56)
+    font_rate = jp_font(38)
+    font_sub = jp_font(30)
+
+    # 現在の問題IDを取得
+    problem_id = game.current_problem.get("id") if isinstance(game.current_problem, dict) else None
+    cutin_dir = None
+    if problem_id:
+        p_dir = C02_config.CUTIN_DIR / problem_id
+        if p_dir.exists():
+            cutin_dir = p_dir
+    if cutin_dir is None:
+        default_dir = C02_config.CUTIN_DIR / "default"
+        if default_dir.exists():
+            cutin_dir = default_dir
+
+    # 1. 背景画像の読み込み (bg.jpg, bg.png など)
+    bg_surface = None
+    if cutin_dir:
+        for ext in [".jpg", ".jpeg", ".png"]:
+            bg_candidate = cutin_dir / f"bg{ext}"
+            if bg_candidate.exists():
+                try:
+                    loaded_bg = pygame.image.load(str(bg_candidate)).convert()
+                    bg_surface = pygame.transform.scale(loaded_bg, (1400, 800))
+                    print(f"[D01_display] カットイン背景画像を読み込みました: {bg_candidate.name}")
+                    break
+                except Exception as e:
+                    print(f"[D01_display] 背景画像の読み込みエラー: {e}")
+
+    # 2. アニメーションGIFの読み込み
+    gif_frames = []
+    gif_durations = []
+    total_gif_duration_ms = 0
+    if cutin_dir:
+        anim_candidate = cutin_dir / "animation.gif"
+        if anim_candidate.exists():
+            try:
+                with Image.open(anim_candidate) as img:
+                    n_frames = getattr(img, "n_frames", 1)
+                    for idx in range(n_frames):
+                        img.seek(idx)
+                        frame_rgba = img.convert("RGBA")
+                        duration = img.info.get("duration", 20)
+                        if duration <= 0:
+                            duration = 20
+                        surf = pygame.image.frombytes(frame_rgba.tobytes(), frame_rgba.size, "RGBA")
+                        gif_frames.append(surf)
+                        gif_durations.append(duration)
+                        total_gif_duration_ms += duration
+                print(f"[D01_display] アニメーションGIFを読み込みました: {len(gif_frames)}フレーム ({total_gif_duration_ms}ms)")
+            except Exception as e:
+                print(f"[D01_display] GIFアニメーションの読み込みエラー: {e}")
+
+    # シンクロ率の取得
+    synchronization_rate = None
+    if isinstance(game.feedback, dict):
+        synchronization_rate = game.feedback.get("synchronization_rate")
+
+    # テキストオブジェクト作成
+    title_surface = font_title.render("★ PERFECT !! ★", True, (255, 215, 0))
+    title_rect = title_surface.get_rect(center=(700, 70))
+
+    if synchronization_rate is not None:
+        rate_surface = font_rate.render(f"シンクロ率：{synchronization_rate:.1f}%", True, (255, 240, 150))
+    else:
+        rate_surface = font_rate.render("シンクロ率：95%以上達成！", True, (255, 240, 150))
+    rate_rect = rate_surface.get_rect(center=(700, 730))
+
+    clock = pygame.time.Clock()
+    running = True
+
+    # 表示時間（ミリ秒）：GIFの長さに合わせる（最低でも2.5秒）
+    if total_gif_duration_ms > 0:
+        DISPLAY_TIME_MS = max(2500, total_gif_duration_ms)
+    else:
+        DISPLAY_TIME_MS = 2500
+
+    start_time = pygame.time.get_ticks()
+
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pass
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                # クリックでスキップして正解画面へ
+                game.to_correct_screen()
+                running = False
+
+        # 経過時間
+        elapsed_time = pygame.time.get_ticks() - start_time
+        if elapsed_time >= DISPLAY_TIME_MS:
+            game.to_correct_screen()
+            running = False
+
+        # 1. 背景の描画
+        if bg_surface:
+            screen.blit(bg_surface, (0, 0))
+        else:
+            screen.fill((20, 25, 45))
+
+        # 2. アニメーションGIFの描画
+        if gif_frames:
+            # 経過時間に基づいて現在のフレーム番号を計算
+            cur_time_in_loop = elapsed_time % max(1, total_gif_duration_ms)
+            accum_ms = 0
+            cur_frame_idx = 0
+            for idx, dur in enumerate(gif_durations):
+                accum_ms += dur
+                if cur_time_in_loop < accum_ms:
+                    cur_frame_idx = idx
+                    break
+            frame_surf = gif_frames[cur_frame_idx]
+            frame_rect = frame_surf.get_rect(center=(700, 400))
+            screen.blit(frame_surf, frame_rect)
+
+        # 3. テキストの描画（読みやすいように少し黒い帯/シャドウをつける）
+        # 上部タイトル帯
+        title_bg = pygame.Surface((title_rect.width + 40, title_rect.height + 16), pygame.SRCALPHA)
+        title_bg.fill((0, 0, 0, 150))
+        screen.blit(title_bg, title_bg.get_rect(center=title_rect.center))
+        screen.blit(title_surface, title_rect)
+
+        # 下部シンクロ率帯
+        rate_bg = pygame.Surface((rate_rect.width + 30, rate_rect.height + 14), pygame.SRCALPHA)
+        rate_bg.fill((0, 0, 0, 150))
+        screen.blit(rate_bg, rate_bg.get_rect(center=rate_rect.center))
+        screen.blit(rate_surface, rate_rect)
+
+        pygame.display.flip()
+        clock.tick(60)
+
+    # カットイン終了後、いつもの正解画面を表示
+    display(game)
+
+
 def show_incorrect(game):
     """不正解フィードバック画面を表示する（pygame版）"""
     print("[D01_display] show_incorrect() called (pygame)")
@@ -815,6 +961,11 @@ def display(game):
         # クリック音
         C05_sound.play_sound("True")
         show_correct(game)
+
+    elif screen == SCREEN_PERFECT:
+        # クリック音（カットイン演出開始）
+        C05_sound.play_sound("True")
+        show_cutin(game)
 
     elif screen == SCREEN_INCORRECT:
         # クリック音

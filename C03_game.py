@@ -4,6 +4,7 @@ SCREEN_SELECT = "select"
 SCREEN_QUIZ = "quiz"
 SCREEN_CORRECT = "correct"
 SCREEN_INCORRECT = "incorrect"
+SCREEN_PERFECT = "perfect"
 
 
 class Game:
@@ -64,7 +65,15 @@ class Game:
         self.feedback = feedback
 
         if result:
-            self.screen = SCREEN_CORRECT
+            # feedback の星やシンクロ率をチェック
+            stars = feedback.get("stars", 1) if isinstance(feedback, dict) else 1
+
+            if stars == 3:
+                #95%以上（星3）の時は専用の演出画面へ！
+                self.screen = SCREEN_PERFECT
+            else:
+                #それ以外は通常の正解画面へ
+                self.screen = SCREEN_CORRECT
         else:
             self.screen = SCREEN_INCORRECT
 
@@ -85,6 +94,11 @@ class Game:
         self.screen = SCREEN_QUIZ
         self.answer_result = None
         self.feedback = None
+
+    def to_correct_screen(self):
+        """カットイン終了後にいつもの正解画面へ切り替える"""
+        print("[C03_game] to_correct_screen() called")
+        self.screen = SCREEN_CORRECT
 
 
 if __name__ == "__main__":
