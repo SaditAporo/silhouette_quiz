@@ -1,4 +1,3 @@
-#import tkinter as tk
 from A01_problem_data import load_problem
 import C02_config
 import C05_sound
@@ -91,6 +90,7 @@ from C03_game import (
     SCREEN_QUIZ,
     SCREEN_CORRECT,
     SCREEN_INCORRECT,
+    SCREEN_PERFECT,
 )
 
 from B01_camera_v1 import (
@@ -692,6 +692,75 @@ def show_correct(game):
     display(game)
 
 
+def show_cutin(game):
+    """星3（95%以上）正解時のカットイン演出画面（数秒後に自動でいつもの正解画面へ遷移）"""
+    print("[D01_display] show_cutin() called (pygame)")
+    pygame.font.init()
+
+    # 画面サイズとタイトルの設定（800x600）
+    screen = pygame.display.set_mode((800, 600))
+    os.environ['SDL_VIDEO_CENTERED'] = '1'
+    pygame.display.set_caption("シルエットパズル - かんぺき！")
+
+    font_title = jp_font(52)
+    font_sub = jp_font(30)
+    font_rate = jp_font(36)
+
+    # シンクロ率の取得
+    synchronization_rate = None
+    if isinstance(game.feedback, dict):
+        synchronization_rate = game.feedback.get("synchronization_rate")
+
+    # テキストオブジェクト作成
+    title_surface = font_title.render("★ PERFECT !! ★", True, (255, 215, 0))
+    title_rect = title_surface.get_rect(center=(400, 220))
+
+    if synchronization_rate is not None:
+        rate_surface = font_rate.render(f"シンクロ率：{synchronization_rate:.1f}%", True, (255, 240, 150))
+    else:
+        rate_surface = font_rate.render("シンクロ率：95%以上達成！", True, (255, 240, 150))
+    rate_rect = rate_surface.get_rect(center=(400, 300))
+
+    sub_surface = font_sub.render("かんぺきです！すばらしい！", True, (255, 255, 255))
+    sub_rect = sub_surface.get_rect(center=(400, 380))
+
+    clock = pygame.time.Clock()
+    running = True
+
+    # カットイン表示時間（ミリ秒）：2500ms = 2.5秒
+    DISPLAY_TIME_MS = 2500
+    start_time = pygame.time.get_ticks()
+
+    while running:
+        # 背景（少し特別感のある濃いネイビー）
+        screen.fill((20, 25, 45))
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pass
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                # クリックでスキップして正解画面へ
+                game.to_correct_screen()
+                running = False
+
+        # 時間経過チェック
+        elapsed_time = pygame.time.get_ticks() - start_time
+        if elapsed_time >= DISPLAY_TIME_MS:
+            game.to_correct_screen()
+            running = False
+
+        # 描画
+        screen.blit(title_surface, title_rect)
+        screen.blit(rate_surface, rate_rect)
+        screen.blit(sub_surface, sub_rect)
+
+        pygame.display.flip()
+        clock.tick(30)
+
+    # カットイン終了後、いつもの正解画面を表示
+    display(game)
+
+
 def show_incorrect(game):
     """不正解フィードバック画面を表示する（pygame版）"""
     print("[D01_display] show_incorrect() called (pygame)")
@@ -815,6 +884,11 @@ def display(game):
         # クリック音
         C05_sound.play_sound("True")
         show_correct(game)
+
+    elif screen == SCREEN_PERFECT:
+        # クリック音（カットイン演出開始）
+        C05_sound.play_sound("True")
+        show_cutin(game)
 
     elif screen == SCREEN_INCORRECT:
         # クリック音
