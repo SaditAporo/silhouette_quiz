@@ -206,15 +206,53 @@ def recognize_shapes(frame):
     if frame is None:
         print("[B02_recognition] Warning: frame is None")
         return recognized_shapes
+    
+    frame_height, frame_width = frame.shape[:2]
+    frame_area = frame_height * frame_width
+    
+    # ----------------------------------------------------
+    # 1. 黒枠の検出とROI（内側領域）の切り出し
+    # ----------------------------------------------------
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    _, thresh = cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY_INV)
+    contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    best_rect = None
+    max_area = 0
+
+    for cnt in contours:
+        area = cv2.contourArea(cnt)
+        if area < frame_area * 0.1 or area > frame_area * 0.95:
+            continue
+        peri = cv2.arcLength(cnt, True)
+        approx = cv2.approxPolyDP(cnt, 0.02 * peri, True)
+        if len(approx) == 4 and cv2.isContourConvex(approx):
+            if area > max_area:
+                max_area = area
+                x, y, w, h = cv2.boundingRect(approx)
+                best_rect = (x, y, w, h)
+
+    # 黒枠が見つかった場合は内側をROIとする。見つからない場合は全体を対象にする
+    if best_rect is not None:
+        x, y, w, h = best_rect
+        margin = 15  # 黒枠の線の太さを避けるためのマージン
+        if w > margin * 2 and h > margin * 2:
+            rx, ry, rw, rh = x + margin, y + margin, w - 2 * margin, h - 2 * margin
+            roi = frame[ry:ry+rh, rx:rx+rw]
+        else:
+            rx, ry = 0, 0
+            roi = frame
+    else:
+        rx, ry = 0, 0
+        roi = frame
 
     # 色相(Hue)・彩度(Saturation)・明度(Value)へ変換
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-    frame_area = frame.shape[0] * frame.shape[1]
+    roi_area = roi.shape[0] * roi.shape[1]
     shape_count = 0
 
     # ----------------------------------------------------
     # 定義する色ごとのHSV範囲と対応する形状・色情報のマッピング
-    # ※照明環境に応じて調整が必要な場合はここのしきい値を調整してください
     # ----------------------------------------------------
 
     color_definitions = [
@@ -367,10 +405,10 @@ def recognize_shapes(frame):
             # 重心計算
             M = cv2.moments(cnt)
             if M["m00"] != 0:
-                cx = int(M["m10"] / M["m00"])
-                cy = int(M["m01"] / M["m00"])
+                cx = int(M["m10"] / M["m00"]) + rx
+                cy = int(M["m01"] / M["m00"]) + ry
             else:
-                cx, cy = int(box_cx), int(box_cy)
+                cx, cy = int(box_cx) + rx, int(box_cy) + ry
 
             rotation_deg = calculate_shape_rotation(cnt, shape_name)
             shape_count += 1
