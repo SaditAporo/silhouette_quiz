@@ -7,71 +7,71 @@
     {
       "shape": "parallelogram",
       "color": null,
-      "centerX": 700,
-      "centerY": 380,
-      "rotation": 333,
+      "centerX": 200,
+      "centerY": 200,
+      "rotation": 66,
       "vertices": [
         {
-          "x": 960,
-          "y": 570
+          "x": 100,
+          "y": 100
         },
         {
-          "x": 790,
-          "y": 240
+          "x": 170,
+          "y": 260
         },
         {
-          "x": 440,
-          "y": 190
+          "x": 280,
+          "y": 300
         },
         {
-          "x": 610,
-          "y": 520
+          "x": 225,
+          "y": 150
         }
       ]
     },
     {
       "shape": "parallelogram",
       "color": null,
-      "centerX": 1220,
-      "centerY": 380,
-      "rotation": 297,
+      "centerX": 380,
+      "centerY": 200,
+      "rotation": 18,
       "vertices": [
         {
-          "x": 960,
-          "y": 570
+          "x": 460,
+          "y": 100
         },
         {
-          "x": 1130,
-          "y": 240
+          "x": 350,
+          "y": 140
         },
         {
-          "x": 1480,
-          "y": 190
+          "x": 300,
+          "y": 300
         },
         {
-          "x": 1310,
-          "y": 520
+          "x": 410,
+          "y": 260
         }
       ]
     },
     {
       "shape": "triangle",
       "color": null,
-      "centerX": 783,
-      "centerY": 757,
-      "rotation": 340,
+      "centerX": 300,
+      "centerY": 380,
+      "rotation": 320,
       "vertices": [
         {
-          "x": 960,
-          "y": 570
+          "x": 170,
+          "y": 400
         },
         {
-          "x": 580,
-          "y": 710
+          "x": 250,
+          "y": 450
         },
         {
-          "x": 810,
-          "y": 990
+          "x": 300,
+          "y": 320
         }
       ]
     },
@@ -83,16 +83,16 @@
       "rotation": 219,
       "vertices": [
         {
-          "x": 960,
-          "y": 570
+          "x": 350,
+          "y": 450
         },
         {
-          "x": 1340,
-          "y": 710
+          "x": 430,
+          "y": 370
         },
         {
-          "x": 1110,
-          "y": 990
+          "x": 280,
+          "y": 310
         }
       ]
     }
