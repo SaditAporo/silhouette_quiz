@@ -1,0 +1,29 @@
+{
+  "id": "p002_triangle001",
+  "name": "三角形",
+  "image": "./data/problems/shilhouette/triangle001.png",
+  "animation": "triangle001.gif",
+  "areas": [
+    {
+      "shape": "triangle",
+      "color": null,
+      "centerX": 960,
+      "centerY": 625,
+      "rotation": 0,
+      "vertices": [
+        {
+          "x": 960,
+          "y": 346
+        },
+        {
+          "x": 1372,
+          "y": 765
+        },
+        {
+          "x": 548,
+          "y": 765
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "id": "p001_house001",
+  "name": "家",
+  "image": "./data/problems/shilhouette/house001.png",
+  "animation": "house001.gif",
+  "areas": [
+    {
+      "shape": "triangle",
+      "color": null,
+      "centerX": 960,
+      "centerY": 353,
+      "rotation": 0,
+      "vertices": [
+        {
+          "x": 960,
+          "y": 120
+        },
+        {
+          "x": 1348,
+          "y": 470
+        },
+        {
+          "x": 572,
+          "y": 470
+        }
+      ]
+    },
+    {
+      "shape": "square",
+      "color": null,
+      "centerX": 960,
+      "centerY": 662,
+      "rotation": 0,
+      "vertices": [
+        {
+          "x": 762,
+          "y": 470
+        },
+        {
+          "x": 1158,
+          "y": 470
+        },
+        {
+          "x": 1158,
+          "y": 854
+        },
+        {
+          "x": 762,
+          "y": 854
+        }
+      ]
+    }
+  ]
+}

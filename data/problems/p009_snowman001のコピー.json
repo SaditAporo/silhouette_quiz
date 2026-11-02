@@ -1,0 +1,49 @@
+{
+  "id": "p009_snowman001",
+  "name": "雪だるま",
+  "image": "./data/problems/shilhouette/snowman001.png",
+  "animation": "snowman001.gif",
+  "areas": [
+    {
+      "shape": "square",
+      "color": null,
+      "centerX": 960,
+      "centerY": 160,
+      "rotation": 0,
+      "vertices": [
+        {
+          "x": 870,
+          "y": 70
+        },
+        {
+          "x": 1050,
+          "y": 70
+        },
+        {
+          "x": 1050,
+          "y": 250
+        },
+        {
+          "x": 870,
+          "y": 250
+        }
+      ]
+    },
+    {
+      "shape": "circle",
+      "color": null,
+      "centerX": 960,
+      "centerY": 400,
+      "rotation": null,
+      "radius": 150
+    },
+    {
+      "shape": "circle",
+      "color": null,
+      "centerX": 960,
+      "centerY": 780,
+      "rotation": null,
+      "radius": 230
+    }
+  ]
+}

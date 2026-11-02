@@ -1,0 +1,62 @@
+{
+  "id": "p011_oden001",
+  "name": "おでん",
+  "image": "./data/problems/shilhouette/oden001.png",
+  "animation": "oden001.gif",
+  "areas": [
+    {
+      "shape": "triangle",
+      "color": null,
+      "centerX": 960,
+      "centerY": 293,
+      "rotation": 0,
+      "vertices": [
+        {
+          "x": 960,
+          "y": 80
+        },
+        {
+          "x": 1280,
+          "y": 400
+        },
+        {
+          "x": 640,
+          "y": 400
+        }
+      ]
+    },
+    {
+      "shape": "circle",
+      "color": null,
+      "centerX": 960,
+      "centerY": 580,
+      "rotation": null,
+      "radius": 180
+    },
+    {
+      "shape": "rectangle",
+      "color": null,
+      "centerX": 960,
+      "centerY": 880,
+      "rotation": 0,
+      "vertices": [
+        {
+          "x": 660,
+          "y": 760
+        },
+        {
+          "x": 1260,
+          "y": 760
+        },
+        {
+          "x": 1260,
+          "y": 1000
+        },
+        {
+          "x": 660,
+          "y": 1000
+        }
+      ]
+    }
+  ]
+}

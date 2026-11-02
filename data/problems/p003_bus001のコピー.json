@@ -1,0 +1,47 @@
+{
+  "id": "p003_bus001",
+  "name": "バス",
+  "image": "./data/problems/shilhouette/bus001.png",
+  "animation": "bus001.gif",
+  "areas": [
+    {
+      "shape": "rectangle",
+      "color": null,
+      "centerX": 960,
+      "centerY": 600,
+      "rotation": 0,
+      "vertices": [
+        {
+          "x": 600,
+          "y": 480
+        },
+        {
+          "x": 1320,
+          "y": 480
+        },
+        {
+          "x": 1320,
+          "y": 720
+        },
+        {
+          "x": 600,
+          "y": 720
+        }
+      ]
+    },
+    {
+      "shape": "circle",
+      "color": null,
+      "centerX": 760,
+      "centerY": 720,
+      "rotation": null
+    },
+    {
+      "shape": "circle",
+      "color": null,
+      "centerX": 1160,
+      "centerY": 720,
+      "rotation": null
+    }
+  ]
+}
