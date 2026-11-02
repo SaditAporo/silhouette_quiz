@@ -7,21 +7,21 @@
     {
       "shape": "triangle",
       "color": null,
-      "centerX": 960,
-      "centerY": 625,
+      "centerX": 320,
+      "centerY": 262,
       "rotation": 0,
       "vertices": [
         {
-          "x": 100,
-          "y": 340
+          "x": 176,
+          "y": 310
         },
         {
-          "x": 540,
-          "y": 340
+          "x": 464,
+          "y": 310
         },
         {
           "x": 320,
-          "y": 130
+          "y": 166
         }
       ]
     }

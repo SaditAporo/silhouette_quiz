@@ -7,88 +7,88 @@
     {
       "shape": "rectangle",
       "color": null,
-      "centerX": 960,
-      "centerY": 620,
+      "centerX": 320,
+      "centerY": 285,
       "rotation": 90,
       "vertices": [
         {
-          "x": 780,
-          "y": 280
+          "x": 260,
+          "y": 135
         },
         {
-          "x": 1140,
-          "y": 280
+          "x": 380,
+          "y": 135
         },
         {
-          "x": 1140,
-          "y": 960
+          "x": 380,
+          "y": 435
         },
         {
-          "x": 780,
-          "y": 960
+          "x": 260,
+          "y": 435
         }
       ]
     },
     {
       "shape": "triangle",
       "color": null,
-      "centerX": 960,
-      "centerY": 213,
+      "centerX": 320,
+      "centerY": 107,
       "rotation": 0,
       "vertices": [
         {
-          "x": 960,
-          "y": 80
+          "x": 235,
+          "y": 135
         },
         {
-          "x": 1140,
-          "y": 280
+          "x": 405,
+          "y": 135
         },
         {
-          "x": 780,
-          "y": 280
+          "x": 320,
+          "y": 50
         }
       ]
     },
     {
       "shape": "triangle",
       "color": null,
-      "centerX": 673,
-      "centerY": 793,
+      "centerX": 233,
+      "centerY": 378,
       "rotation": 180,
       "vertices": [
         {
-          "x": 780,
-          "y": 580
+          "x": 260,
+          "y": 325
         },
         {
-          "x": 780,
-          "y": 900
+          "x": 260,
+          "y": 405
+        },
+        {
+          "x": 180,
+          "y": 405
+        }
+      ]
+    },
+    {
+      "shape": "triangle",
+      "color": null,
+      "centerX": 407,
+      "centerY": 378,
+      "rotation": 180,
+      "vertices": [
+        {
+          "x": 380,
+          "y": 325
+        },
+        {
+          "x": 380,
+          "y": 405
         },
         {
           "x": 460,
-          "y": 900
-        }
-      ]
-    },
-    {
-      "shape": "triangle",
-      "color": null,
-      "centerX": 1247,
-      "centerY": 793,
-      "rotation": 180,
-      "vertices": [
-        {
-          "x": 1140,
-          "y": 580
-        },
-        {
-          "x": 1140,
-          "y": 900
-        },
-        {
-          "x": 1460,
-          "y": 900
+          "y": 405
         }
       ]
     }

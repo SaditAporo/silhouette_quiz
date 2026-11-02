@@ -474,7 +474,8 @@ def show_quiz(game):
 #            sil_label = font_label.render(f"{game.current_problem['image']} ", True, (100, 100, 100))
             image_filename = game.current_problem['image'] 
             sil_image = pygame.image.load(image_filename)
-            screen.blit(sil_image, (frame_silhouette_x + 20, frame_y + 20))
+            sil_image = pygame.transform.scale(sil_image, (400, 300))
+            screen.blit(sil_image, (frame_silhouette_x + 10, frame_y + 110))
         else:
             sil_label = font_label.render("読み込み中", True, (100, 100, 100))
             screen.blit(sil_label, (frame_silhouette_x + 80, frame_y + 240))

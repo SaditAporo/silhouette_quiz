@@ -7,46 +7,46 @@
     {
       "shape": "triangle",
       "color": null,
-      "centerX": 960,
-      "centerY": 353,
+      "centerX": 320,
+      "centerY": 152,
       "rotation": 0,
       "vertices": [
         {
-          "x": 200,
+          "x": 176,
           "y": 200
         },
         {
-          "x": 450,
+          "x": 464,
           "y": 200
         },
         {
           "x": 320,
-          "y": 100
+          "y": 56
         }
       ]
     },
     {
       "shape": "square",
       "color": null,
-      "centerX": 960,
-      "centerY": 662,
+      "centerX": 320,
+      "centerY": 302,
       "rotation": 0,
       "vertices": [
         {
-          "x": 230,
+          "x": 218,
           "y": 200
         },
         {
-          "x": 230,
-          "y": 400
-        },
-        {
-          "x": 400,
-          "y": 400
-        },
-        {
-          "x": 400,
+          "x": 422,
           "y": 200
+        },
+        {
+          "x": 422,
+          "y": 404
+        },
+        {
+          "x": 218,
+          "y": 404
         }
       ]
     }

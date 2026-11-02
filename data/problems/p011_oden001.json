@@ -7,54 +7,54 @@
     {
       "shape": "triangle",
       "color": null,
-      "centerX": 960,
-      "centerY": 293,
+      "centerX": 320,
+      "centerY": 106,
       "rotation": 0,
       "vertices": [
         {
-          "x": 960,
-          "y": 80
+          "x": 229,
+          "y": 136
         },
         {
-          "x": 1280,
-          "y": 400
+          "x": 411,
+          "y": 136
         },
         {
-          "x": 640,
-          "y": 400
+          "x": 320,
+          "y": 45
         }
       ]
     },
     {
       "shape": "circle",
       "color": null,
-      "centerX": 960,
-      "centerY": 580,
+      "centerX": 320,
+      "centerY": 211,
       "rotation": null,
-      "radius": 180
+      "radius": 75
     },
     {
       "shape": "rectangle",
       "color": null,
-      "centerX": 960,
-      "centerY": 880,
+      "centerX": 320,
+      "centerY": 350,
       "rotation": 0,
       "vertices": [
         {
-          "x": 660,
-          "y": 760
+          "x": 160,
+          "y": 286
         },
         {
-          "x": 1260,
-          "y": 760
+          "x": 480,
+          "y": 286
         },
         {
-          "x": 1260,
-          "y": 1000
+          "x": 480,
+          "y": 414
         },
         {
-          "x": 660,
-          "y": 1000
+          "x": 160,
+          "y": 414
         }
       ]
     }

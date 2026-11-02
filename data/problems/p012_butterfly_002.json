@@ -7,49 +7,49 @@
     {
       "shape": "parallelogram",
       "color": null,
-      "centerX": 200,
+      "centerX": 230,
       "centerY": 200,
-      "rotation": 66,
+      "rotation": 339,
       "vertices": [
         {
-          "x": 100,
+          "x": 140,
           "y": 100
         },
         {
-          "x": 170,
+          "x": 200,
           "y": 260
         },
         {
-          "x": 280,
+          "x": 320,
           "y": 300
         },
         {
-          "x": 225,
-          "y": 150
+          "x": 260,
+          "y": 140
         }
       ]
     },
     {
       "shape": "parallelogram",
       "color": null,
-      "centerX": 380,
+      "centerX": 410,
       "centerY": 200,
-      "rotation": 18,
+      "rotation": 291,
       "vertices": [
         {
-          "x": 460,
+          "x": 500,
           "y": 100
         },
         {
-          "x": 350,
+          "x": 380,
           "y": 140
         },
         {
-          "x": 300,
+          "x": 320,
           "y": 300
         },
         {
-          "x": 410,
+          "x": 440,
           "y": 260
         }
       ]
@@ -57,42 +57,42 @@
     {
       "shape": "triangle",
       "color": null,
-      "centerX": 300,
-      "centerY": 380,
-      "rotation": 320,
+      "centerX": 260,
+      "centerY": 370,
+      "rotation": 328,
       "vertices": [
         {
-          "x": 170,
-          "y": 400
+          "x": 190,
+          "y": 380
         },
         {
-          "x": 250,
-          "y": 450
+          "x": 270,
+          "y": 430
         },
         {
-          "x": 300,
-          "y": 320
+          "x": 320,
+          "y": 300
         }
       ]
     },
     {
       "shape": "triangle",
       "color": null,
-      "centerX": 1137,
-      "centerY": 757,
-      "rotation": 219,
+      "centerX": 380,
+      "centerY": 370,
+      "rotation": 249,
       "vertices": [
         {
-          "x": 350,
-          "y": 450
+          "x": 450,
+          "y": 380
         },
         {
-          "x": 430,
-          "y": 370
+          "x": 320,
+          "y": 300
         },
         {
-          "x": 280,
-          "y": 310
+          "x": 370,
+          "y": 430
         }
       ]
     }

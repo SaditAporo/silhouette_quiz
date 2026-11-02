@@ -7,43 +7,43 @@
     {
       "shape": "square",
       "color": null,
-      "centerX": 310,
-      "centerY": 90,
+      "centerX": 320,
+      "centerY": 80,
       "rotation": 0,
       "vertices": [
         {
-          "x": 250,
-          "y": 50
+          "x": 270,
+          "y": 30
         },
         {
-          "x": 250,
-          "y": 100
+          "x": 370,
+          "y": 30
         },
         {
-          "x": 350,
-          "y": 100
+          "x": 370,
+          "y": 130
         },
         {
-          "x": 360,
-          "y": 50
+          "x": 270,
+          "y": 130
         }
       ]
     },
     {
       "shape": "circle",
       "color": null,
-      "centerX": 310,
-      "centerY": 360,
+      "centerX": 320,
+      "centerY": 195,
       "rotation": null,
-      "radius": 150
+      "radius": 65
     },
     {
       "shape": "circle",
       "color": null,
-      "centerX": 310,
-      "centerY": 200,
+      "centerX": 320,
+      "centerY": 360,
       "rotation": null,
-      "radius": 230
+      "radius": 100
     }
   ]
 }
