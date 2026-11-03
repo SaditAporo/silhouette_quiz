@@ -35,6 +35,8 @@ WINDOW_TITLE = "シルエットパズル"
 
 # カメラ設定
 CAMERA_INDEX = 0
+CAMERA_WIDTH = 640
+CAMERA_HEIGHT = 480
 
 
 # ========================================

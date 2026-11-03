@@ -2,7 +2,7 @@ import cv2
 import threading
 import time
 
-from C02_config import CAMERA_INDEX
+from C02_config import CAMERA_INDEX, CAMERA_WIDTH, CAMERA_HEIGHT
 
 
 _camera = None
@@ -24,11 +24,19 @@ def initialize_camera():
     if not _camera.isOpened():
         raise RuntimeError("カメラを開けませんでした。")
 
+    # カメラに 640x480 解像度を要求する
+    _camera.set(cv2.CAP_PROP_FRAME_WIDTH, CAMERA_WIDTH)
+    _camera.set(cv2.CAP_PROP_FRAME_HEIGHT, CAMERA_HEIGHT)
+
+    actual_w = int(_camera.get(cv2.CAP_PROP_FRAME_WIDTH))
+    actual_h = int(_camera.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    print(f"[B01_camera] カメラデバイス解像度: {actual_w}x{actual_h} -> 出力固定: {CAMERA_WIDTH}x{CAMERA_HEIGHT}")
+
     return _camera
 
 
 def capture_frame():
-    """カメラから1フレーム取得する"""
+    """カメラから1フレーム取得し、必ず 640x480 (4:3) に揃えて返す"""
     global _camera
 
     if _camera is None:
@@ -36,8 +44,27 @@ def capture_frame():
 
     ret, frame = _camera.read()
 
-    if not ret:
+    if not ret or frame is None:
         return None
+
+    h, w = frame.shape[:2]
+    if w != CAMERA_WIDTH or h != CAMERA_HEIGHT:
+        # 16:9 などのカメラでも図形が歪まないよう、中央を 4:3 にクロップしてから 640x480 にリサイズ
+        target_aspect = CAMERA_WIDTH / CAMERA_HEIGHT
+        current_aspect = w / h
+        if abs(current_aspect - target_aspect) > 0.01:
+            if current_aspect > target_aspect:
+                # 横長（16:9など）の場合、左右を均等にクロップ
+                new_w = int(round(h * target_aspect))
+                offset_x = (w - new_w) // 2
+                frame = frame[:, offset_x:offset_x + new_w]
+            else:
+                # 縦長の場合、上下を均等にクロップ
+                new_h = int(round(w / target_aspect))
+                offset_y = (h - new_h) // 2
+                frame = frame[offset_y:offset_y + new_h, :]
+
+        frame = cv2.resize(frame, (CAMERA_WIDTH, CAMERA_HEIGHT))
 
     return frame
 
